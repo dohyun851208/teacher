@@ -1,0 +1,4 @@
+interface:
+  display_name: "Teacher"
+  short_description: "Korean school forms, documents, and slides"
+  default_prompt: "Use $teacher to create or fill a Korean teacher administrative document while preserving the original format."

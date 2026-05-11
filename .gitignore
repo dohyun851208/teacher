@@ -1,0 +1,29 @@
+# Local and generated files
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hwp2hwpx-repo/
+
+# Private project artifacts that should not be copied into this release repo
+/docs/
+/output/
+/html-slides/
+/이력서 참고/
+/통장사본&재직증명서&신분증&서명/
+/제출용 수업 교안/
+*.hwp
+*.xls
+*.xlsx
+*.jpg
+*.jpeg
+*.png
+*.pdf
+*.json
+
+# Intentional bundled skill templates
+!teacher/templates/**
+!teacher/**/*.md
+!teacher/**/*.py
+!teacher/agents/openai.yaml
