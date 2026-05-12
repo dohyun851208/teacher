@@ -1,7 +1,6 @@
 ---
 name: teacher
-description: Create, fill, and verify Korean school teacher administrative documents and teaching materials. Use when working with HWP/HWPX forms, XLS/XLSX templates, applications, official letters, reports, resumes, achievement statements, training or career lists, and HTML-based class or training slides for Korean education contexts, especially when preserving form layout, merged cells, HWPX XML structure, signatures, or browser-presented slide decks matters.
-allowed-tools: Bash(python *), Bash(python3 *), Read, Write, Edit, MultiEdit, Glob, Grep, LS
+description: Create, fill, and verify Korean school teacher administrative documents and teaching materials. Use when working with HWP/HWPX forms, XLS/XLSX templates, applications, official letters, reports, resumes, achievement statements, training or career lists, HTML-based class or training slides, any current/project folder whose name ends with "(AI)", or an external single-file Korean school document path supplied by the user, especially when preserving form layout, merged cells, HWPX XML structure, signatures, or browser-presented slide decks matters.
 ---
 
 # Teacher
@@ -12,10 +11,15 @@ Use this skill to route Korean teacher paperwork requests into the right documen
 
 Start every task by reading `references/routing.md`, then load only the workflow reference that matches the request and file type.
 
+For first-time `(AI)` teacher workspaces, folder indexing, source-to-Markdown summaries, or external single-file handling, use `references/project-setup.md`.
+
 ## Context And Privacy
 
 - Treat user-provided project files as the source of truth for personal data, evidence files, forms, and design references.
 - Prefer structured Markdown in the user's `docs/` folder before opening original evidence files.
+- If the current folder or nearest project root ends with `(AI)`, follow this skill's routing even when the user does not explicitly type `$teacher`.
+- If the user supplies an external file path for a one-off school document, process it in place as a single-file task and save the result next to the source file with `_완성본` appended.
+- Do not scan or read every original file during first setup. Start from folder names, filenames, and extensions; open source files only when they are relevant to the user's current task or a requested summary.
 - Use `references/profile-schema.md` as the recommended private-project data layout.
 - Do not copy actual personal data, signatures, ID cards, certificates, bankbook images, or completed output files into this skill.
 - Save created or modified text files as UTF-8. In Python, pass `encoding="utf-8"` whenever reading or writing text.

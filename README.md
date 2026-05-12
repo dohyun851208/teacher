@@ -29,6 +29,13 @@ For Claude Code, copy the same `teacher/` folder into Claude's skills directory:
 Copy-Item -Recurse -Force .\teacher "$env:USERPROFILE\.claude\skills\teacher"
 ```
 
+## Usage Notes
+
+- Name a long-running teacher workspace folder with `(AI)` at the end to make it a teacher workspace.
+- On first setup, the skill indexes folder names, filenames, and extensions first, then creates `docs/00_폴더지도.md`, `docs/01_분류기준.md`, and `docs/02_자료목록.md`.
+- The skill does not read every source document during setup. It opens originals only when relevant to the current task or a requested summary.
+- For a one-off file outside the workspace, the result is saved next to the source file with `_완성본` appended.
+
 ## Pre-Publish Checks
 
 Run these from this `github-ready/` folder before publishing:
