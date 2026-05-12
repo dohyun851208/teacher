@@ -42,6 +42,7 @@ chcp 65001
    - HTML slides and training materials: `references/html-slides.md`
    - Design references for HTML slides: `references/html-slide-design-sources.md`
    - Apple-style slide preset: `references/html-slide-apple-style.md`
+   - **My Slides preset (Korean Edu Pastel, default for PPT/slide requests): `references/my-slides/SKILL.md`** — pastel blue-grey background, cream cards, Plus Jakarta Sans, drawing canvas, inline-edit dot toggle, viewport/accessibility safeguards. Use this by default when the user asks for slides, PPT, presentation, training, or class materials, unless they specify a different style.
 4. Preserve original formatting, merged cells, tables, images, margins, fonts, and alignment unless the user asks for a redesign.
 5. Verify the result by reopening, extracting text, checking workbook structure, rendering, or screenshotting as appropriate.
 
@@ -92,4 +93,8 @@ For applications, reports, official letters, resumes, achievement statements, re
 
 When the user asks for new presentation materials, training materials, class materials, slides, or "PPT", default to HTML slides unless they explicitly request `.pptx` or provide an existing PowerPoint file to edit.
 
-Build for desktop classroom or training presentation first, usually 1920x1080. Use the user's `design.md`, existing HTML/CSS, PDF, screenshots, or images as design sources when present. Verify in a local browser and check representative screenshots for overflow, clipped Korean line breaks, and overlapping elements.
+**Default style is the My Slides preset** at `references/my-slides/` (Korean Edu Pastel — pastel blue-grey background, cream cards, Plus Jakarta Sans, drawing canvas, dot-toggle inline editing). Follow `references/my-slides/SKILL.md` for the full workflow, `references/my-slides/html-template.md` for the CSS/JS template and component library, and `references/my-slides/animation-patterns.md` for mood-based animation patterns.
+
+Override the default only when the user supplies their own `design.md`, a PDF/screenshot/HTML design source, or explicitly asks for a different preset (e.g., Apple style → `references/html-slide-apple-style.md`).
+
+Build for desktop classroom or training presentation first, usually 1920x1080. Verify in a local browser and check representative screenshots for overflow, clipped Korean line breaks, and overlapping elements.

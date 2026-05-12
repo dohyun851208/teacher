@@ -2,6 +2,22 @@
 
 사용자가 발표자료, 수업자료, 연수자료, 슬라이드, PPT를 새로 만들어 달라고 하면 기본 산출물은 `.pptx`가 아니라 HTML 슬라이드다.
 
+## 기본 스타일: My Slides (Korean Edu Pastel)
+
+별도 디자인 소스가 주어지지 않으면 **`references/my-slides/`의 my-slides 프리셋을 기본**으로 쓴다.
+
+- 파스텔 블루그레이 배경 + 크림 카드, Plus Jakarta Sans, 보라 포인트
+- 드로잉 캔버스(마우스 하이라이터), 우측 상단 점 토글 인라인 편집(`data-edit` + localStorage)
+- viewport / 접근성 안전장치 내장 (`prefers-reduced-motion`, short-viewport 단계, 카드 max-size)
+- 컴포넌트 라이브러리: 통계 카드, 비교표, Feature Explorer, 지도, 미스터리 리빌 등
+
+사용자가 다음 중 하나를 요청하면 이 기본을 따르지 않고 별도 프리셋을 적용한다:
+- Apple 스타일 → `references/html-slide-apple-style.md`
+- 사용자가 직접 디자인 소스(PDF, design.md, 기존 HTML) 제공 → `references/html-slide-design-sources.md`
+- 명시적으로 다른 톤 요구 → 사용자 지시 우선
+
+전체 사용법은 [my-slides/SKILL.md](my-slides/SKILL.md), CSS/JS 템플릿은 [my-slides/html-template.md](my-slides/html-template.md), 분위기별 애니메이션 패턴은 [my-slides/animation-patterns.md](my-slides/animation-patterns.md) 참조.
+
 ## 기본 원칙
 
 - 기본 파일명은 `index.html`로 한다.
