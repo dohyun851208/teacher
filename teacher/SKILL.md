@@ -9,16 +9,18 @@ description: Create, fill, and verify Korean school teacher administrative docum
 
 Use this skill to route Korean teacher paperwork requests into the right document workflow, preserve original form structure, and keep private profile data outside the reusable skill package.
 
-Start every task by reading `references/routing.md`, then load only the workflow reference that matches the request and file type.
+Start every task by reading `references/routing.md`, then load only the format workflow and content-rule references that match the request.
 
 For first-time `(AI)` teacher workspaces, folder indexing, source-to-Markdown summaries, or external single-file handling, use `references/project-setup.md`.
 
 ## Context And Privacy
 
 - Treat user-provided project files as the source of truth for personal data, evidence files, forms, and design references.
+- Interpret project-internal paths as relative to the current work folder unless the user explicitly provides an external absolute path.
 - Prefer structured Markdown in the user's `docs/` folder before opening original evidence files.
 - If the current folder or nearest project root ends with `(AI)`, follow this skill's routing even when the user does not explicitly type `$teacher`.
-- If the user supplies an external file path for a one-off school document, process it in place as a single-file task and save the result next to the source file with `_완성본` appended.
+- Save modified, completed, and submission-ready outputs inside a `완성본/` folder under the current work folder. Create the folder if it does not exist, and do not overwrite the original file.
+- If the user supplies an external file path for a one-off school document, treat the source file's parent as the work folder and save the result inside that folder's `완성본/` subfolder.
 - Do not scan or read every original file during first setup. Start from folder names, filenames, and extensions; open source files only when they are relevant to the user's current task or a requested summary.
 - Use `references/profile-schema.md` as the recommended private-project data layout.
 - Do not copy actual personal data, signatures, ID cards, certificates, bankbook images, or completed output files into this skill.
@@ -34,17 +36,18 @@ chcp 65001
 ## Workflow Routing
 
 1. Read `references/routing.md`.
-2. Identify whether the task is filling an existing form, creating a new document, creating spreadsheet data, or building slides.
-3. Load the matching reference:
-   - HWP/HWPX forms: `references/hwpx-forms.md`
-   - XLS/XLSX forms: `references/xlsx-forms.md`
-   - Applications, official letters, reports, resumes, achievement statements: `references/teacher-admin-rules.md`
-   - HTML slides and training materials: `references/html-slides.md`
-   - Design references for HTML slides: `references/html-slide-design-sources.md`
-   - Apple-style slide preset: `references/html-slide-apple-style.md`
+2. Choose the output-format workflow first:
+   - HWP/HWPX forms or HWPX documents: `references/workflows/hwpx-forms.md`
+   - XLS/XLSX forms or spreadsheet tables: `references/workflows/xlsx-forms.md`
+   - HTML slides and training/class materials: `references/workflows/html-slides.md`
+   - Existing `.ppt`/`.pptx` files: use a PowerPoint workflow only when the user explicitly asks to edit the provided file.
+3. If the task is a resume, achievement statement, application, official letter, report, training list, or career summary, also load `references/teacher-admin-rules.md` and the matching `references/content-rules/*.md` file.
+4. For HTML slides, also load the relevant style reference:
+   - Design sources: `references/html-slide-design-sources.md`
+   - Apple-style preset: `references/html-slide-apple-style.md`
    - **My Slides preset (Korean Edu Pastel, default for PPT/slide requests): `references/my-slides/SKILL.md`** — pastel blue-grey background, cream cards, Plus Jakarta Sans, drawing canvas, inline-edit dot toggle, viewport/accessibility safeguards. Use this by default when the user asks for slides, PPT, presentation, training, or class materials, unless they specify a different style.
-4. Preserve original formatting, merged cells, tables, images, margins, fonts, and alignment unless the user asks for a redesign.
-5. Verify the result by reopening, extracting text, checking workbook structure, rendering, or screenshotting as appropriate.
+5. Preserve original formatting, merged cells, tables, images, margins, fonts, and alignment unless the user asks for a redesign.
+6. Verify the result by reopening, extracting text, checking workbook structure, rendering, or screenshotting as appropriate.
 
 ## HWP And HWPX
 
@@ -79,15 +82,11 @@ For low-level HWPX creation or repair, use the bundled helpers and templates:
 
 Use `openpyxl` for `.xls` and `.xlsx` workflows when possible. Before writing values, inspect sheet names, merged ranges, header rows, and the data region. Write values only to the top-left cell of a merged range, preserve styles, and reopen the workbook after saving to confirm values, merges, borders, fonts, alignment, and row heights.
 
-## Teacher Documents
+## Content Rules
 
-For applications, reports, official letters, resumes, achievement statements, recommendations, plans, training lists, and career summaries:
+Applications, reports, official letters, resumes, achievement statements, recommendations, plans, training lists, and career summaries are content rules layered on top of a format workflow, not separate file workflows.
 
-- Follow the user's explicit instructions first.
-- Prefer the user's `docs/*.md` summaries over raw evidence files.
-- Use official school names unless the form width requires abbreviations.
-- Fit long content to the form width by summarizing rather than overflowing.
-- Keep temporary analysis files and private notes out of final deliverables.
+Load `references/teacher-admin-rules.md` as the content-rule index, then load only the needed detail file under `references/content-rules/`.
 
 ## HTML Slides
 
@@ -95,6 +94,6 @@ When the user asks for new presentation materials, training materials, class mat
 
 **Default style is the My Slides preset** at `references/my-slides/` (Korean Edu Pastel — pastel blue-grey background, cream cards, Plus Jakarta Sans, drawing canvas, dot-toggle inline editing). Follow `references/my-slides/SKILL.md` for the full workflow, `references/my-slides/html-template.md` for the CSS/JS template and component library, and `references/my-slides/animation-patterns.md` for mood-based animation patterns.
 
-Override the default only when the user supplies their own `design.md`, a PDF/screenshot/HTML design source, or explicitly asks for a different preset (e.g., Apple style → `references/html-slide-apple-style.md`).
+Override the default only when the user supplies their own `design.md`, a PDF/screenshot/HTML design source, or explicitly asks for a different preset (e.g., Apple style -> `references/html-slide-apple-style.md`).
 
 Build for desktop classroom or training presentation first, usually 1920x1080. Verify in a local browser and check representative screenshots for overflow, clipped Korean line breaks, and overlapping elements.

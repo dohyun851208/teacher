@@ -1,6 +1,6 @@
 # HTML 슬라이드 Apple 스타일
 
-Apple 스타일은 사진/오브젝트 중심의 절제된 발표자료를 만들 때 사용한다. 공통 발표자료 원칙은 `references/html-slides.md`를 우선하고, 이 문서는 Apple식 시각 언어만 정의한다.
+Apple 스타일은 사진/오브젝트 중심의 절제된 발표자료를 만들 때 사용한다. 공통 발표자료 원칙은 `references/workflows/html-slides.md`를 우선하고, 이 문서는 Apple식 시각 언어만 정의한다.
 
 ## 핵심 방향
 

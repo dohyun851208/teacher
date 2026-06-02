@@ -46,7 +46,7 @@ HTML 발표자료를 만들 때 사용자가 디자인 기준을 제공하면 �
 
 ## 스타일 프리셋을 사용할 때
 
-- 공통 발표자료 원칙은 `references/html-slides.md`를 우선한다.
+- 공통 발표자료 원칙은 `references/workflows/html-slides.md`를 우선한다.
 - 특정 스타일의 시각 언어는 별도 프리셋 문서에 둔다.
 - Apple 스타일은 `references/html-slide-apple-style.md`를 따른다.
 - 공통 원칙과 프리셋이 충돌하면 발표 가독성, 의미 단위 줄바꿈, 1920x1080 검증을 우선한다.

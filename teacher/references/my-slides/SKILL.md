@@ -324,9 +324,9 @@ PDF나 PPT에서 페이지 단위로 뽑은 이미지는 상단에 원본 챕터
 
 ## 공유/배포 (선택사항)
 
-원본 frontend-slides 스킬의 스크립트 활용 가능:
-- PDF 내보내기: `bash C:\Users\com\.claude\skills\frontend-slides\scripts\export-pdf.sh [파일명].html`
-- Vercel 배포: `bash C:\Users\com\.claude\skills\frontend-slides\scripts\deploy.sh [폴더명]`
+원본 frontend-slides 스킬의 스크립트가 설치되어 있으면 활용 가능:
+- PDF 내보내기: `bash <frontend-slides>/scripts/export-pdf.sh [파일명].html`
+- Vercel 배포: `bash <frontend-slides>/scripts/deploy.sh [폴더명]`
 
 ## Phase 3: 전달
 

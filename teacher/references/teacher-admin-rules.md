@@ -1,23 +1,18 @@
-# 교사 업무문서 작성 규칙
+# 교사 업무문서 내용 규칙
 
-교사 행정 문서는 양식의 기존 구조를 존중하고, 제출처가 기대하는 표현을 우선한다.
+이 문서는 HWPX, XLSX, HTML 같은 산출물 형식 workflow가 아니라 내용 규칙 인덱스다. 먼저 파일 형식에 맞는 workflow를 고른 뒤, 문서 성격에 맞는 내용 규칙을 추가로 적용한다.
 
-## 자료 참조
+## 적용 순서
 
-- 정리된 `docs/*.md`를 원본 파일보다 먼저 본다.
-- Markdown 자료로 충분하지 않을 때만 원본 증빙 파일을 연다.
-- 개인정보, 서명, 신분증, 통장사본, 재직증명서는 필요한 제출물에만 사용한다.
+1. `references/routing.md`에서 산출물 형식을 결정한다.
+2. HWPX 양식이면 `references/workflows/hwpx-forms.md`, XLSX 양식이면 `references/workflows/xlsx-forms.md`, 발표자료이면 `references/workflows/html-slides.md`를 따른다.
+3. 이력서, 공적조서, 신청서처럼 문서 성격이 중요한 경우 아래 내용 규칙을 함께 읽는다.
 
-## 표기
+## 내용 규칙 파일
 
-- 학교명은 정식 명칭을 기본으로 한다.
-- 표 폭이 좁은 경우에만 약칭을 사용한다.
-- 날짜는 양식 형식에 맞춘다. 예: `2026.03.01`, `2026.03~현재`, `26.03~현재`
-- 연수 실적은 기간, 과정명, 기관, 시간을 양식 열 구조에 맞게 압축한다.
+- 공통 규칙: `references/content-rules/common.md`
+- 이력서: `references/content-rules/resume.md`
+- 공적조서, 공적요약서, 표창 추천서: `references/content-rules/achievement-statement.md`
+- 신청서, 지원서, 참가신청서: `references/content-rules/application.md`
 
-## 작성 품질
-
-- 양식의 병합셀, 테두리, 글꼴, 정렬을 보존한다.
-- 긴 내용은 무리하게 넣지 말고 양식 폭에 맞게 요약한다.
-- 제출용 파일에는 불필요한 임시 파일, 분석 결과, 개인 메모를 포함하지 않는다.
-- 결과물은 가능하면 다시 열거나 렌더링해서 내용 유지와 잘림 여부를 확인한다.
+공문, 보고서, 계획서, 추천서, 연수/경력 목록은 아직 별도 파일이 없으면 `references/content-rules/common.md`를 기준으로 작성하고, 반복 사용이 많아질 때 세부 규칙 파일을 추가한다.
