@@ -30,8 +30,8 @@
 
 ## 새 자료 만들기
 
-- 신청서, 공문, 보고서, 이력서, 공적조서, 추천서, 계획서: HWPX 또는 문서형 산출물을 우선 고려하고, 필요하면 `references/teacher-admin-rules.md`의 내용 규칙을 함께 적용한다.
-- 명단, 집계표, 연수목록, 경력산출표, 예산표: XLSX를 우선 고려한다.
+- 신청서, 공문, 보고서, 회의록, 이력서, 공적조서, 추천서, 계획서: HWPX 또는 문서형 산출물을 우선 고려하고, 필요하면 `references/teacher-admin-rules.md`의 내용 규칙을 함께 적용한다.
+- 명단, 집계표, 연수목록, 경력산출표, 예산표, 예산요구서: XLSX를 우선 고려하고, 필요하면 `references/teacher-admin-rules.md`의 내용 규칙을 함께 적용한다.
 - 발표자료, 연수자료, 수업자료, 슬라이드, "PPT": HTML 기반 슬라이드를 기본값으로 만든다.
 - 사용자가 명시적으로 "pptx", "파워포인트 파일", "PowerPoint"를 요구하거나 기존 `.pptx` 템플릿을 제공한 경우에만 PPTX를 만든다.
 
@@ -40,6 +40,8 @@
 - 이력서, 자기소개식 이력서, 경력기술서: `references/content-rules/resume.md`
 - 공적조서, 공적요약서, 표창 추천서: `references/content-rules/achievement-statement.md`
 - 신청서, 지원서, 참가신청서: `references/content-rules/application.md`
+- 회의록, 협의록, 협의 결과 보고: `references/content-rules/meeting-minutes.md`
+- 성립전 예산 요구서, 부서예산요구서, 예산표: `references/content-rules/budget-request.md`
 - 공문, 보고서, 계획서, 추천서, 연수/경력 목록: 별도 규칙이 없으면 `references/content-rules/common.md`
 
 ## 프로젝트 초기 세팅과 자료 정리

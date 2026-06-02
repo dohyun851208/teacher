@@ -14,5 +14,7 @@
 - 이력서: `references/content-rules/resume.md`
 - 공적조서, 공적요약서, 표창 추천서: `references/content-rules/achievement-statement.md`
 - 신청서, 지원서, 참가신청서: `references/content-rules/application.md`
+- 회의록, 협의록, 협의 결과 보고: `references/content-rules/meeting-minutes.md`
+- 성립전 예산 요구서, 부서예산요구서, 예산표: `references/content-rules/budget-request.md`
 
 공문, 보고서, 계획서, 추천서, 연수/경력 목록은 아직 별도 파일이 없으면 `references/content-rules/common.md`를 기준으로 작성하고, 반복 사용이 많아질 때 세부 규칙 파일을 추가한다.

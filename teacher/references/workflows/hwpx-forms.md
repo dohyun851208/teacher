@@ -44,11 +44,18 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 1. 원본 `.hwp`는 한글 COM `Open` + `SaveAs(..., "HWPX")`로 먼저 HWPX 작업본을 만든다.
 2. 텍스트와 서명 위치는 `clone_form.py --analyze`와 `Contents/section0.xml`의 실제 문단/run을 함께 확인한다.
 3. 날짜, 생년월일, 성명 같은 단순 값은 해당 `<hp:t>` 또는 문단 단위로 치환한다.
-4. 서명 이미지는 한글 COM `InsertPicture`에 의존하지 말고 HWPX ZIP/XML을 직접 수정한다. COM 이미지 삽입은 환경에 따라 대화상자나 내부 처리에서 멈출 수 있다.
-5. ZIP에는 `BinData/서명.png`를 추가하고, `Contents/content.hpf`의 `<opf:manifest>`에는 `media-type="image/png" isEmbeded="1"` 항목을 추가한다.
-6. 서명 자리에는 완전한 `<hp:pic>` 구조를 넣고, `hc:img binaryItemIDRef`가 `content.hpf`의 이미지 `id`와 일치하게 한다.
-7. 이미지 뒤에는 `<hp:t/>`를 유지한다. 일부 HWPX에서 그림 run 끝의 빈 텍스트 노드가 없으면 한글에서 불안정할 수 있다.
-8. 최종본은 한글 COM으로 한 번 `Open` + `SaveAs(..., "HWPX")`를 수행해 미리보기와 내부 리소스명을 한글이 정리하게 한다.
+4. 서명 이미지는 우선 `scripts/insert_signature_hwpx.py`로 넣는다. PowerShell에서 긴 XML 문자열을 `python -c`로 조립하지 않는다. 따옴표가 제거되어 XML이 깨지기 쉽다.
+5. 기본 호출 예:
+
+```powershell
+$env:PYTHONIOENCODING='utf-8'
+python "$SKILL_DIR\scripts\insert_signature_hwpx.py" "원본.hwpx" "서명.png" --name "홍길동"
+```
+
+6. `--name`으로 `성명 : 이름` 문단을 찾지 못하면 `--anchor "생년월일 : 1990.01.01          성명 : 홍길동"`처럼 실제 하단 문단의 고유 텍스트를 넘긴다. 동의서 안에는 표 헤더의 `성명`도 있으므로 기본 검색은 마지막 일치 문단을 사용한다.
+7. 표시 크기는 기본 25mm 폭이다. 양식의 성명 줄이 좁으면 `--width-mm 20`, 넓으면 `--width-mm 30`처럼 조정한다.
+8. 스크립트는 ZIP에 `BinData/signature.png`를 추가하고, `Contents/content.hpf`의 `<opf:manifest>`에 이미지 항목을 등록하며, 서명 자리에는 완전한 `<hp:pic>` 구조와 뒤따르는 `<hp:t/>`를 넣는다.
+9. 최종본은 가능하면 한글 COM으로 한 번 `Open` + `SaveAs(..., "HWPX")`를 수행해 미리보기와 내부 리소스명을 한글이 정리하게 한다. 단, COM 이미지 삽입 자체에는 의존하지 않는다.
 
 주의:
 
@@ -57,6 +64,7 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 - COM으로 다시 저장하면 `BinData/signature.png`가 `BinData/image1.png`처럼 바뀔 수 있다. 검증할 때 파일명보다 `content.hpf` 등록 여부, 이미지 개수, 문서 미리보기를 확인한다.
 - 원본 `.hwp`에는 쓰지 말고, 변환본과 최종본을 별도 경로로 만든다.
 - 직접 ZIP을 다시 쓸 때 `mimetype` 엔트리는 `ZIP_STORED`로 유지한다.
+- `scripts/insert_signature_hwpx.py`를 고쳐야 할 때도 텍스트/XML 파일은 `encoding="utf-8"` 또는 명시적 `.decode("utf-8")`/`.encode("utf-8")`로 처리한다.
 
 ## 표 구조 분석
 
@@ -82,6 +90,8 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 
 ## 검증
 
+- `python scripts/validate.py 결과.hwpx`
 - `clone_form.py --analyze 결과.hwpx`
+- `python scripts/verify_hwpx.py --source 원본.hwpx --result 결과.hwpx`
 - 주요 값 count 확인
 - 가능하면 한글에서 PDF로 저장 후 첫 페이지를 이미지로 렌더링해 잘림과 겹침을 확인한다.

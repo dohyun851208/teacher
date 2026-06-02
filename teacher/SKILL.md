@@ -1,6 +1,6 @@
 ---
 name: teacher
-description: Create, fill, and verify Korean school teacher administrative documents and teaching materials. Use when working with HWP/HWPX forms, XLS/XLSX templates, applications, official letters, reports, resumes, achievement statements, training or career lists, HTML-based class or training slides, any current folder or ancestor/project folder whose name ends with "(AI)" or "(ai)" case-insensitively, or an external single-file Korean school document path supplied by the user, especially when preserving form layout, merged cells, HWPX XML structure, signatures, or browser-presented slide decks matters.
+description: Create, fill, and verify Korean school teacher administrative documents and teaching materials. Use when working with HWP/HWPX forms, XLS/XLSX templates, applications, official letters, reports, resumes, achievement statements, meeting minutes, budget requests, training or career lists, HTML-based class or training slides, any current folder or ancestor/project folder whose name ends with "(AI)" or "(ai)" case-insensitively, or an external single-file Korean school document path supplied by the user, especially when preserving form layout, merged cells, HWPX XML structure, signatures, or browser-presented slide decks matters.
 ---
 
 # Teacher
@@ -42,7 +42,7 @@ chcp 65001
    - XLS/XLSX forms or spreadsheet tables: `references/workflows/xlsx-forms.md`
    - HTML slides and training/class materials: `references/workflows/html-slides.md`
    - Existing `.ppt`/`.pptx` files: use a PowerPoint workflow only when the user explicitly asks to edit the provided file.
-3. If the task is a resume, achievement statement, application, official letter, report, training list, or career summary, also load `references/teacher-admin-rules.md` and the matching `references/content-rules/*.md` file.
+3. If the task is a resume, achievement statement, application, meeting minutes, budget request, official letter, report, training list, or career summary, also load `references/teacher-admin-rules.md` and the matching `references/content-rules/*.md` file.
 4. For HTML slides, also load the relevant style reference:
    - Design sources: `references/html-slide-design-sources.md`
    - Apple-style preset: `references/html-slide-apple-style.md`
@@ -85,7 +85,7 @@ Use `openpyxl` for `.xls` and `.xlsx` workflows when possible. Before writing va
 
 ## Content Rules
 
-Applications, reports, official letters, resumes, achievement statements, recommendations, plans, training lists, and career summaries are content rules layered on top of a format workflow, not separate file workflows.
+Applications, reports, official letters, resumes, achievement statements, meeting minutes, budget requests, recommendations, plans, training lists, and career summaries are content rules layered on top of a format workflow, not separate file workflows.
 
 Load `references/teacher-admin-rules.md` as the content-rule index, then load only the needed detail file under `references/content-rules/`.
 
