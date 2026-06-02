@@ -1,6 +1,6 @@
 ---
 name: teacher
-description: Create, fill, and verify Korean school teacher administrative documents and teaching materials. Use when working with HWP/HWPX forms, XLS/XLSX templates, applications, official letters, reports, resumes, achievement statements, training or career lists, HTML-based class or training slides, any current/project folder whose name ends with "(AI)", or an external single-file Korean school document path supplied by the user, especially when preserving form layout, merged cells, HWPX XML structure, signatures, or browser-presented slide decks matters.
+description: Create, fill, and verify Korean school teacher administrative documents and teaching materials. Use when working with HWP/HWPX forms, XLS/XLSX templates, applications, official letters, reports, resumes, achievement statements, training or career lists, HTML-based class or training slides, any current folder or ancestor/project folder whose name ends with "(AI)" or "(ai)" case-insensitively, or an external single-file Korean school document path supplied by the user, especially when preserving form layout, merged cells, HWPX XML structure, signatures, or browser-presented slide decks matters.
 ---
 
 # Teacher
@@ -18,7 +18,7 @@ For first-time `(AI)` teacher workspaces, folder indexing, source-to-Markdown su
 - Treat user-provided project files as the source of truth for personal data, evidence files, forms, and design references.
 - Interpret project-internal paths as relative to the current work folder unless the user explicitly provides an external absolute path.
 - Prefer structured Markdown in the user's `docs/` folder before opening original evidence files.
-- If the current folder or nearest project root ends with `(AI)`, follow this skill's routing even when the user does not explicitly type `$teacher`.
+- If the current folder or any ancestor/project folder name ends with `(AI)` case-insensitively, follow this skill's routing even when the user does not explicitly type `$teacher`. For example, work inside `./양식(AI)/서명넣기/` is still inside the `양식(AI)` teacher workspace.
 - Save modified, completed, and submission-ready outputs inside a `완성본/` folder under the current work folder. Create the folder if it does not exist, and do not overwrite the original file.
 - If the user supplies an external file path for a one-off school document, treat the source file's parent as the work folder and save the result inside that folder's `완성본/` subfolder.
 - Do not scan or read every original file during first setup. Start from folder names, filenames, and extensions; open source files only when they are relevant to the user's current task or a requested summary.
