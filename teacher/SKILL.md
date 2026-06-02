@@ -16,11 +16,12 @@ For first-time `(AI)` teacher workspaces, folder indexing, source-to-Markdown su
 ## Context And Privacy
 
 - Treat user-provided project files as the source of truth for personal data, evidence files, forms, and design references.
-- Interpret project-internal paths as relative to the current work folder unless the user explicitly provides an external absolute path.
+- If the user gives a target file or folder path, decide the teacher workspace from that target path before using the current shell folder. If the target path or one of its ancestor folders ends with `(AI)` case-insensitively, use the nearest such `(AI)` folder as the work folder.
+- Interpret project-internal paths as relative to the chosen work folder unless the user explicitly provides another external absolute path.
 - Prefer structured Markdown in the user's `docs/` folder before opening original evidence files.
 - If the current folder or any ancestor/project folder name ends with `(AI)` case-insensitively, follow this skill's routing even when the user does not explicitly type `$teacher`. For example, work inside `./양식(AI)/서명넣기/` is still inside the `양식(AI)` teacher workspace.
 - Save modified, completed, and submission-ready outputs inside a `완성본/` folder under the current work folder. Create the folder if it does not exist, and do not overwrite the original file.
-- If the user supplies an external file path for a one-off school document, treat the source file's parent as the work folder and save the result inside that folder's `완성본/` subfolder.
+- If the user supplies an external file path whose path and ancestors do not include an `(AI)` folder, treat the source file's parent as the work folder and save the result inside that folder's `완성본/` subfolder.
 - Do not scan or read every original file during first setup. Start from folder names, filenames, and extensions; open source files only when they are relevant to the user's current task or a requested summary.
 - Use `references/profile-schema.md` as the recommended private-project data layout.
 - Do not copy actual personal data, signatures, ID cards, certificates, bankbook images, or completed output files into this skill.
