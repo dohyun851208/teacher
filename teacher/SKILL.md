@@ -52,7 +52,7 @@ chcp 65001
 
 ## HWP And HWPX
 
-For `.hwp`, first produce a `.hwpx` working copy. Prefer Hancom Office COM conversion when available; otherwise use `scripts/convert_hwp.py` as a fallback or analysis helper.
+For `.hwp`, preserve the original form layout before choosing an output path. Use the standardized Hancom COM HWPX fast conversion path in `references/workflows/hwpx-forms.md` as the first attempt. If the HWP is a table-based form and direct HWPX conversion stalls, fails, or changes the table structure, use the HWPML2X preservation fallback: extract HWPML2X from the original, edit only target cells by row/column/span, reload it with Hancom COM, and save as `_원본표_완성본.hwp` plus HWPX if needed.
 
 For `.hwpx`, analyze before editing:
 
@@ -78,6 +78,8 @@ For low-level HWPX creation or repair, use the bundled helpers and templates:
 - `scripts/verify_hwpx.py`
 - `templates/`
 - `references/hwpx/`
+
+Do not use `md2hwpx.py` or a rebuilt Markdown table as a fallback for filling an existing HWP form unless the user explicitly accepts a redesigned/recreated form. It does not preserve the original table widths, row heights, merged cells, or border details.
 
 ## XLS And XLSX
 

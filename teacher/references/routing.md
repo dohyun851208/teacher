@@ -22,7 +22,7 @@
 
 ## 기존 양식 채우기
 
-- `.hwp`: 먼저 HWPX로 변환한 뒤 HWPX 양식 workflow를 적용한다. 한글 COM 사용이 가능하면 원본 HWP를 한글에서 직접 HWPX로 저장한 파일을 우선 사용하고, `scripts/convert_hwp.py` 변환본은 COM이 불가능할 때나 구조 분석 보조용으로 사용한다. 편집 후 최종 산출물은 다시 HWP로 저장하지 않고 `.hwpx`로 제공한다.
+- `.hwp`: 원본 표, 병합, 행 높이, 열 너비 보존을 최우선으로 한다. 한글 COM으로 원본 HWP를 HWPX로 빠르게 저장할 수 있으면 HWPX 양식 workflow를 적용한다. 변환이 멈추거나 실패하고 표 기반 양식이면 HWPML2X를 추출해 원본 표 셀만 채우고 `_원본표_완성본.hwp`로 저장한 뒤 필요하면 HWPX도 함께 저장한다. `md2hwpx.py`로 새 표를 재작성하는 방식은 기존 양식 채우기의 fallback으로 사용하지 않는다.
 - `.hwpx`: `references/workflows/hwpx-forms.md`를 따른다.
 - `.xls`, `.xlsx`: `references/workflows/xlsx-forms.md`를 따른다.
 - `.ppt`, `.pptx`: 기존 발표자료 파일을 직접 수정해야 할 때만 PowerPoint workflow를 사용한다.

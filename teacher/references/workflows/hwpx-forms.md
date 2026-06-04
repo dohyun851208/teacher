@@ -4,12 +4,42 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 
 ## 기본 흐름
 
-1. `.hwp`는 먼저 HWPX로 변환한다. 한글 COM 사용이 가능하면 원본 HWP를 한글에서 직접 HWPX로 저장한 파일을 우선 사용한다. `scripts/convert_hwp.py` 변환본은 COM이 불가능할 때나 구조 분석 보조용으로 사용한다.
+1. `.hwp`는 먼저 원본 표 보존 가능성을 판단한다. 한글 COM 사용이 가능하고 HWPX 저장이 빠르게 성공하면 원본 HWP를 한글에서 직접 HWPX로 저장한 파일을 우선 사용한다. 표 기반 양식에서 HWPX 저장이 멈추거나 실패하면 즉시 아래 HWPML2X 우회로 전환한다.
 2. `scripts/clone_form.py --analyze 원본.hwpx`로 문단, 표, 텍스트 조각을 확인한다.
 3. 단순 기존 텍스트 치환이면 `clone_form.py --map map.json`을 사용한다.
 4. 빈 표 셀을 채워야 하면 `Contents/section0.xml`의 표/셀 구조를 분석하고 XML을 직접 수정한다.
 5. 편집 결과는 최종 산출물로 `.hwpx`를 유지한다. 다시 `.hwp`로 저장하지 않는다. 최종 HWPX는 가능하면 한글에서 직접 열기 검증한다.
 6. 결과 HWPX를 다시 열거나 텍스트 추출해서 주요 값이 유지되는지 검증한다.
+
+## HWPX 빠른 변환 표준 경로
+
+대부분의 `.hwp` 양식은 한글 COM으로 HWPX 변환하는 것이 가장 좋은 1차 경로다. 변환 가능성을 길게 탐색하지 말고 아래 표준 시도를 한 번 수행한다.
+
+1. 한글 COM 객체를 만들고 창을 숨긴다.
+2. `RegisterModule("FilePathCheckDLL", "FilePathCheckerModule")`를 먼저 호출한다.
+3. `SetMessageBoxMode(0x00020000)`로 대화상자 때문에 멈추는 상황을 줄인다.
+4. `Open(input, "", "forceopen:true")`로 원본 HWP를 연다.
+5. `SaveAs(output.hwpx, "HWPX", "")`로 HWPX를 저장한다.
+6. 저장된 HWPX에 대해 `validate.py`, `clone_form.py --analyze`, 주요 텍스트 포함 여부를 확인한다.
+
+주의:
+
+- HWPX 변환은 최대 1회만 표준 경로로 시도한다.
+- `scripts/convert_hwp.py`처럼 외부 레포나 추가 설치에 의존하는 변환기는 COM 표준 경로 실패 뒤 구조 분석 보조용으로만 고려한다.
+- COM 변환이 30초 이상 멈추면 한글 프로세스를 정리하고 같은 변환을 반복하지 않는다.
+- HWPX 변환이 성공했어도 원본과 결과의 표 개수, 핵심 표의 `rowCnt`/`colCnt` 또는 이에 대응하는 구조가 달라지면 원본 표 보존 실패로 본다.
+
+## HWPX 변환 실패 시 원본 표 보존 우회
+
+기존 `.hwp` 양식의 표가 핵심이고 HWPX 변환 표준 경로가 실패했을 때만 HWPML2X 우회를 사용한다. 이 우회는 최우선 경로가 아니라 원본 표 보존 fallback이다.
+
+- 한글 COM `Open` 또는 `SaveAs(..., "HWPX")`가 30초 이상 멈추거나 보안/변환 문제로 실패하면 같은 시도를 반복하지 않는다.
+- 이때 `md2hwpx.py`로 새 HWPX 표를 다시 그리는 방식은 사용하지 않는다. 사용자가 명시적으로 "새 양식으로 다시 만들어도 됨"이라고 한 경우를 제외하면 기존 표가 깨진 산출물이 된다.
+- 우선 한글 COM `GetTextFile("HWPML2X", "")`로 원본 HWPML2X를 추출한다.
+- HWPML2X 안에서 `TABLE`의 `RowCount`, `ColCount`, `CELL`의 `RowAddr`, `ColAddr`, `ColSpan`, `RowSpan`을 기준으로 목표 셀을 찾고, 빈 `<TEXT CharShape="..."/>` 또는 기존 `<CHAR>`만 교체한다.
+- 편집한 HWPML2X는 한글 COM `SetTextFile(hwpml, "HWPML2X", "")`로 다시 불러온 뒤 `.hwp`로 먼저 저장한다. 필요하면 그 `.hwp`를 다시 열어 `.hwpx`로 저장한다.
+- 검증은 원본과 결과의 표 개수, 주요 `RowCount`/`ColCount`, 주요 텍스트 포함 여부를 함께 확인한다.
+- 이 우회 경로로 만든 `.hwp`/`.hwpx`에는 파일명에 `_원본표_완성본`처럼 원본 표 보존 여부가 드러나게 붙인다.
 
 ## 텍스트 추출
 
