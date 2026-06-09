@@ -9,7 +9,7 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 3. 단순 기존 텍스트 치환이면 `clone_form.py --map map.json`을 사용한다.
 4. 빈 표 셀을 채워야 하면 `Contents/section0.xml`의 표/셀 구조를 분석하고 XML을 직접 수정한다.
 5. 편집 결과는 최종 산출물로 `.hwpx`를 유지한다. 다시 `.hwp`로 저장하지 않는다. 최종 HWPX는 가능하면 한글에서 직접 열기 검증한다.
-6. 결과 HWPX를 다시 열거나 텍스트 추출해서 주요 값이 유지되는지 검증한다.
+6. 결과 HWPX를 다시 열거나 표 포함 텍스트 추출로 주요 값이 유지되는지 검증한다.
 
 ## HWPX 빠른 변환 표준 경로
 
@@ -45,6 +45,28 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 
 - 빠른 확인: `Preview/PrvText.txt`
 - 정확한 확인: `Contents/section0.xml`의 `<hp:t>` 텍스트
+- 표 양식 확인: `python scripts/text_extract.py 결과.hwpx --include-tables`
+- `text_extract.py` 기본값은 표 내부 텍스트를 건너뛴다. 표 양식에서 제목만 추출되면 실패로 단정하지 말고 `--include-tables` 또는 `--format markdown`으로 다시 확인한다.
+
+## PowerShell 임시 Python 실행
+
+PowerShell에서 여러 줄 Python 코드를 실행할 때는 Bash식 heredoc 또는 긴 `python -c "..."` 인자 전달을 피한다. BOM, 따옴표, 한글 경로 때문에 분석 단계가 실패하기 쉽다.
+
+안정적인 실행 템플릿:
+
+```powershell
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+chcp 65001
+$env:PYTHONIOENCODING='utf-8'
+$code = @'
+import sys
+print("ok")
+'@
+$code | python -c "import sys; exec(sys.stdin.read().lstrip(chr(0xfeff)))"
+```
+
+같은 분석 코드를 반복할 때는 임시 인자 조립을 계속 고치지 말고 스크립트 파일 또는 기존 `scripts/` 도구로 옮긴다.
 
 ## 빈 셀 채우기
 
@@ -63,6 +85,10 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 주의:
 
 - 빈 문자열을 순차 replace로 skip하지 않는다. 같은 빈 run이 반복 매칭될 수 있으므로 위치 또는 셀 주소 기반으로 치환한다.
+- 이미 문단과 run이 있는 표 셀은 새 문단을 재작성하기보다 원본 `<hp:p>`와 `<hp:run>` 개수를 유지하며 기존 run 내부 텍스트만 바꾼다.
+- 한 문단에 run이 여러 개 있으면 첫 run에 새 텍스트를 넣고 나머지 run은 빈 run으로 정리한다. 그렇지 않으면 기존 텍스트가 뒤에 남아 중복될 수 있다.
+- 새 줄 수가 원본 문단 수보다 많으면 셀 폭 기준으로 내용을 더 짧게 압축하거나 마지막 문단에 합친다. 검증 통과를 위해 임의 문단, 빈 run, XML 주석을 덧붙이지 않는다.
+- 편집 전후 같은 셀의 `cellAddr`, `cellSpan`, `cellSz`, `cellMargin`, `subList` 속성, 문단 수, run 수가 유지되는지 비교한다. 값이 줄어들면 양식 보존 실패로 보고 다시 편집한다.
 - `INPUT=OUTPUT` 저장은 금지한다. 임시 파일을 만들고 마지막에 이동한다.
 - 한글 파일명/경로에서 이동 실패가 날 수 있으면 영문 임시 파일을 사용한 뒤 rename한다.
 - 단순 텍스트 삽입은 보통 `fix_namespaces.py` 후처리가 필요 없다.
@@ -109,19 +135,31 @@ python "$SKILL_DIR\scripts\insert_signature_hwpx.py" "원본.hwpx" "서명.png" 
 
 - 폰트 크기: `Contents/header.xml`의 `<hh:charPr id="N" height="H">`, `H/100 = pt`
 - 유효 폭: `cellSz width - 좌우 margin`
-- 한글 1글자 폭은 대략 `pt * ratio/100 * 100` HWPUNIT 수준으로 보고 여유 있게 줄인다.
-- 행 높이가 낮은 고정 행이면 줄바꿈보다 약칭을 우선한다.
+- 한글 1글자 폭은 대략 `pt * 0.9~1.0 * 100` HWPUNIT 수준으로 보고 여유 있게 줄당 글자 수를 잡는다.
+- 기본 원칙은 내용을 축약하지 않고 의미 단위로 강제 줄바꿈하는 것이다. 한 문단을 긴 한 줄로 넣지 말고 여러 문단 또는 여러 짧은 줄로 나눈다.
+- 좁은 열이 많은 단계형·목록형 표는 짧은 제목 1줄과 짧은 불릿 3~4개로 나눈다. 예시 문장도 `예)`, 상황, 요청을 2~4줄로 분리한다.
+- 행 높이가 낮은 1쪽 고정 양식은 페이지 수를 유지한다. 이때는 행 높이를 크게 늘리기보다 양식에 있는 작은 글자 스타일을 먼저 찾고, 셀 안에서 짧은 의미 줄로 나눈다.
+- 내용이 물리적으로 들어가지 않는 경우에는 임의로 삭제하지 말고, 중요도가 낮은 항목을 `확인 필요` 또는 별도 첨부/추가자료 대상으로 남길지 판단한다.
 
-압축 예:
+줄당 글자 수의 보수적 기준:
 
-- 연수명: `AIEP선도교사역량강화`, `에듀테크수업평가설계`
-- 기간: `25.12.14~21`, `25.11~26.01`
-- 기관: `인천광역시교육청AI융합교육원`이 너무 길면 `인천AI융합교육원`
+| 셀 유효 폭 | 권장 줄 길이 | 작성 방식 |
+| --- | --- | --- |
+| 5,000~7,000 HWPUNIT | 한글 5~8자 | 명사구 중심, 2~3줄 |
+| 7,000~11,000 HWPUNIT | 한글 8~12자 | 짧은 불릿, 긴 기관명은 줄바꿈 |
+| 11,000~18,000 HWPUNIT | 한글 12~18자 | 제목 1줄 + 불릿 3~4개 |
+| 18,000~30,000 HWPUNIT | 한글 20~30자 | 문장 1개를 2~3줄로 분할 |
+| 30,000 HWPUNIT 이상 | 한글 35~55자 | 문단형 가능, 필요 시 작은 글자 스타일 사용 |
 
 ## 검증
 
 - `python scripts/validate.py 결과.hwpx`
 - `clone_form.py --analyze 결과.hwpx`
 - `python scripts/verify_hwpx.py --source 원본.hwpx --result 결과.hwpx`
+- `python scripts/text_extract.py 결과.hwpx --include-tables`
 - 주요 값 count 확인
-- 가능하면 한글에서 PDF로 저장 후 첫 페이지를 이미지로 렌더링해 잘림과 겹침을 확인한다.
+- 원본 대비 표 개수, 셀 주소, 병합, 셀 크기, 여백, 문단 수, run 수를 비교한다. 특히 `verify_hwpx.py`가 통과해도 남은 기존 텍스트나 중복 텍스트는 직접 확인한다.
+- 이전 양식의 고유 placeholder나 예시 문구가 남았는지 검색한다. 예: `(     분)`, `○○`, 원본 예시 문장.
+- 검증 경고를 없애려고 section 크기 보정용 XML 주석, 의미 없는 빈 run, 임의 문단을 추가하지 않는다. 그런 보정은 통과처럼 보이지만 제출본 품질을 낮춘다.
+- 가능하면 한글 COM으로 최종 HWPX를 실제 열기 검증한다: `Open(path, "", "forceopen:true")`가 `True`인지 확인한다.
+- PDF/이미지 렌더링 검증은 기본으로 수행하지 않는다. 사용자가 요청했거나, 최종 제출본에서 글자 겹침·잘림 위험이 높다고 판단될 때만 제안하거나 수행한다.

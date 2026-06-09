@@ -58,16 +58,8 @@ def image_size(path: Path) -> tuple[int, int]:
     raise ValueError(f"Unsupported image format or invalid image: {path}")
 
 
-def nearest_work_root(source: Path) -> Path:
-    for folder in [source.parent, *source.parents]:
-        if folder.name.lower().endswith("(ai)"):
-            return folder
-    return source.parent
-
-
 def unique_output_path(source: Path) -> Path:
-    out_dir = nearest_work_root(source) / "완성본"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = source.parent
     candidate = out_dir / f"{source.stem}_완성본{source.suffix}"
     if not candidate.exists():
         return candidate
@@ -290,7 +282,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Insert a signature image into an HWPX form.")
     parser.add_argument("source", help="Source .hwpx file")
     parser.add_argument("signature", help="Signature image file (.png/.jpg/.bmp)")
-    parser.add_argument("--output", help="Output .hwpx path. Defaults to nearest (AI)/완성본.")
+    parser.add_argument("--output", help="Output .hwpx path. Defaults to source folder with _완성본 suffix.")
     parser.add_argument("--name", help="Name to anchor after, e.g. 홍길동 -> '성명 : 홍길동'")
     parser.add_argument("--anchor", help="Exact paragraph text anchor. Defaults to '성명 : <name>' or '성명 :'.")
     parser.add_argument("--occurrence", choices=("first", "last"), default="last", help="Which matching paragraph to use.")

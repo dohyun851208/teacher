@@ -20,7 +20,7 @@ For first-time `(AI)` teacher workspaces, folder indexing, source-to-Markdown su
 - Interpret project-internal paths as relative to the chosen work folder unless the user explicitly provides another external absolute path.
 - Prefer structured Markdown in the user's `docs/` folder before opening original evidence files.
 - If the current folder or any ancestor/project folder name ends with `(AI)` case-insensitively, follow this skill's routing even when the user does not explicitly type `$teacher`. For example, work inside `./양식(AI)/서명넣기/` is still inside the `양식(AI)` teacher workspace.
-- Save modified, completed, and submission-ready outputs in the current work folder with a suffix such as `_완성본`, `_제출용`, or `_검토본`; do not create a separate `완성본/` folder unless the user explicitly asks for one. Do not overwrite the original file.
+- When modifying or filling an existing source file, save the output next to the source file with a suffix such as `_완성본`, `_제출용`, or `_검토본`; do not create a separate `완성본/` folder unless the user explicitly asks for one. Do not overwrite the original file. For newly created files with no source file, save in the current work folder using the same suffix rule.
 - If the user supplies an external file path whose path and ancestors do not include an `(AI)` folder, treat the source file's parent as the work folder and save the result next to the source file using a suffix such as `_완성본`, `_제출용`, or `_검토본`.
 - Do not scan or read every original file during first setup. Start from folder names, filenames, and extensions; open source files only when they are relevant to the user's current task or a requested summary.
 - Use `references/profile-schema.md` as the recommended private-project data layout.
@@ -58,7 +58,7 @@ For `.hwpx`, analyze before editing:
 
 ```bash
 python scripts/clone_form.py --analyze input.hwpx
-python scripts/text_extract.py input.hwpx
+python scripts/text_extract.py input.hwpx --include-tables
 ```
 
 For simple form text replacement, preserve the ZIP/XML structure:
@@ -67,7 +67,7 @@ For simple form text replacement, preserve the ZIP/XML structure:
 python scripts/clone_form.py input.hwpx output.hwpx --map map.json
 ```
 
-For blank table cells, inspect actual cell addresses in `Contents/section0.xml` and write only the target cell content. Keep the final deliverable as `.hwpx`; do not save back to `.hwp`.
+For blank table cells, inspect actual cell addresses in `Contents/section0.xml` and write only the target cell content. Prefer preserving each target cell's original paragraph/run structure and replacing text inside existing runs; clear leftover runs so stale text cannot remain. Keep the final deliverable as `.hwpx`; do not save back to `.hwp`.
 
 For low-level HWPX creation or repair, use the bundled helpers and templates:
 
