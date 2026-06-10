@@ -48,11 +48,15 @@ chcp 65001
    - Apple-style preset: `references/html-slide-apple-style.md`
    - **My Slides preset (Korean Edu Pastel, default for PPT/slide requests): `references/my-slides/SKILL.md`** — pastel blue-grey background, cream cards, Plus Jakarta Sans, drawing canvas, inline-edit dot toggle, viewport/accessibility safeguards. Use this by default when the user asks for slides, PPT, presentation, training, or class materials, unless they specify a different style.
 5. Preserve original formatting, merged cells, tables, images, margins, fonts, and alignment unless the user asks for a redesign.
-6. Verify the result by reopening, extracting text, checking workbook structure, rendering, or screenshotting as appropriate.
+6. Verify the result by extracting text, checking structure, or using the format-specific workflow. For HWPX-only deliverables, use structural validation and key value checks by default, not PDF/image rendering or extra HWPX verification copies.
 
 ## HWP And HWPX
 
-For `.hwp`, preserve the original form layout before choosing an output path. Use the standardized Hancom COM HWPX fast conversion path in `references/workflows/hwpx-forms.md` as the first attempt. If the HWP is a table-based form and direct HWPX conversion stalls, fails, or changes the table structure, use the HWPML2X preservation fallback: extract HWPML2X from the original, edit only target cells by row/column/span, reload it with Hancom COM, and save as `_원본표_완성본.hwp` plus HWPX if needed.
+When the final deliverable is HWPX only, never create a final HWP by default. Use Hancom COM only as an initial converter from source HWP to temporary HWPX when needed, then edit the HWPX ZIP/XML directly, validate it, save only `*_완성본.hwpx`, and delete temporary files.
+
+Default HWP/HWPX path: source `.hwp` -> temporary `.hwpx` conversion -> direct HWPX ZIP/XML edits -> `scripts/validate.py` structural validation -> key input checks -> final `*_완성본.hwpx` saved next to the source -> temporary file cleanup. Do not re-save the completed HWPX through Hancom COM, do not create final `_완성본.hwp`, do not create a separate verification HWPX, and do not perform PDF/image rendering unless the user explicitly asks or approves it.
+
+If direct HWP-to-HWPX conversion fails, do not automatically switch to an HWPML2X/HWP-producing fallback. Report the failure or ask before using any non-default recovery path.
 
 For `.hwpx`, analyze before editing:
 

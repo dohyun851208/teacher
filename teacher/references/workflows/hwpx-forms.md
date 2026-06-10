@@ -4,42 +4,52 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 
 ## 기본 흐름
 
-1. `.hwp`는 먼저 원본 표 보존 가능성을 판단한다. 한글 COM 사용이 가능하고 HWPX 저장이 빠르게 성공하면 원본 HWP를 한글에서 직접 HWPX로 저장한 파일을 우선 사용한다. 표 기반 양식에서 HWPX 저장이 멈추거나 실패하면 즉시 아래 HWPML2X 우회로 전환한다.
-2. `scripts/clone_form.py --analyze 원본.hwpx`로 문단, 표, 텍스트 조각을 확인한다.
+최종 산출물이 HWPX일 때의 기본 경로:
+
+원본 `.hwp` -> 임시 `.hwpx` 변환 -> HWPX ZIP/XML 직접 편집 -> `validate.py` 구조 검증 -> 주요 입력값 확인 -> 최종 `*_완성본.hwpx` 저장 -> 임시 파일 삭제
+
+1. `.hwp` 원본은 한글 COM으로 임시 `.hwpx` 작업본을 1회 만든다. 원본이 이미 `.hwpx`이면 원본을 덮어쓰지 말고 복사본을 작업본으로 둔다.
+2. `scripts/clone_form.py --analyze 작업본.hwpx`로 문단, 표, 텍스트 조각을 확인한다.
 3. 단순 기존 텍스트 치환이면 `clone_form.py --map map.json`을 사용한다.
 4. 빈 표 셀을 채워야 하면 `Contents/section0.xml`의 표/셀 구조를 분석하고 XML을 직접 수정한다.
-5. 편집 결과는 최종 산출물로 `.hwpx`를 유지한다. 다시 `.hwp`로 저장하지 않는다. 최종 HWPX는 가능하면 한글에서 직접 열기 검증한다.
-6. 결과 HWPX를 다시 열거나 표 포함 텍스트 추출로 주요 값이 유지되는지 검증한다.
+5. 편집 결과는 최종 산출물로 `.hwpx`만 유지한다. 다시 `.hwp`로 저장하지 않는다.
+6. `scripts/validate.py` 구조 검증과 표 포함 텍스트 추출로 주요 값이 유지되는지 확인한다.
+7. 임시 변환본, 압축 해제 폴더, 임시 스크립트 산출물은 삭제한다.
 
-## HWPX 빠른 변환 표준 경로
+기본으로 하지 않을 것:
 
-대부분의 `.hwp` 양식은 한글 COM으로 HWPX 변환하는 것이 가장 좋은 1차 경로다. 변환 가능성을 길게 탐색하지 말고 아래 표준 시도를 한 번 수행한다.
+- `_완성본.hwp` 생성
+- 완성된 HWPX를 한컴 COM으로 재저장
+- 검증용 HWPX 별도 생성
+- PDF/이미지 렌더링 검증
+
+## HWP를 임시 HWPX로 변환
+
+대부분의 `.hwp` 양식은 한글 COM으로 임시 HWPX를 만드는 것이 가장 안정적인 준비 단계다. 이는 최종 HWP를 만드는 과정이 아니라, 원본 HWP를 편집 가능한 HWPX로 꺼내는 1회 변환이다.
 
 1. 한글 COM 객체를 만들고 창을 숨긴다.
 2. `RegisterModule("FilePathCheckDLL", "FilePathCheckerModule")`를 먼저 호출한다.
 3. `SetMessageBoxMode(0x00020000)`로 대화상자 때문에 멈추는 상황을 줄인다.
 4. `Open(input, "", "forceopen:true")`로 원본 HWP를 연다.
-5. `SaveAs(output.hwpx, "HWPX", "")`로 HWPX를 저장한다.
-6. 저장된 HWPX에 대해 `validate.py`, `clone_form.py --analyze`, 주요 텍스트 포함 여부를 확인한다.
+5. `SaveAs(temp_work.hwpx, "HWPX", "")`로 임시 HWPX 작업본을 저장한다.
+6. 저장된 임시 HWPX에 대해 `validate.py`, `clone_form.py --analyze`, 주요 텍스트 포함 여부를 확인한다.
 
 주의:
 
 - HWPX 변환은 최대 1회만 표준 경로로 시도한다.
+- 한글 COM은 이 준비 단계에만 사용한다. 최종 `*_완성본.hwpx`를 정리하려고 `Open` + `SaveAs(..., "HWPX")`를 다시 수행하지 않는다.
 - `scripts/convert_hwp.py`처럼 외부 레포나 추가 설치에 의존하는 변환기는 COM 표준 경로 실패 뒤 구조 분석 보조용으로만 고려한다.
 - COM 변환이 30초 이상 멈추면 한글 프로세스를 정리하고 같은 변환을 반복하지 않는다.
-- HWPX 변환이 성공했어도 원본과 결과의 표 개수, 핵심 표의 `rowCnt`/`colCnt` 또는 이에 대응하는 구조가 달라지면 원본 표 보존 실패로 본다.
+- HWPX 변환이 성공했어도 원본과 결과의 표 개수, 핵심 표의 `rowCnt`/`colCnt` 또는 이에 대응하는 구조가 달라지면 원본 표 보존 실패로 보고 자동 fallback하지 않는다. 사용자 승인이나 별도 지시를 받은 뒤 비기본 복구 경로를 선택한다.
 
-## HWPX 변환 실패 시 원본 표 보존 우회
+## HWPX 변환 실패 시
 
-기존 `.hwp` 양식의 표가 핵심이고 HWPX 변환 표준 경로가 실패했을 때만 HWPML2X 우회를 사용한다. 이 우회는 최우선 경로가 아니라 원본 표 보존 fallback이다.
+기본 경로에서는 HWPX 변환 실패 뒤 자동 우회를 하지 않는다. 실패 사실, 멈춘 단계, 원본 보존 위험을 사용자에게 짧게 알리고 다음 지시를 받는다.
 
 - 한글 COM `Open` 또는 `SaveAs(..., "HWPX")`가 30초 이상 멈추거나 보안/변환 문제로 실패하면 같은 시도를 반복하지 않는다.
-- 이때 `md2hwpx.py`로 새 HWPX 표를 다시 그리는 방식은 사용하지 않는다. 사용자가 명시적으로 "새 양식으로 다시 만들어도 됨"이라고 한 경우를 제외하면 기존 표가 깨진 산출물이 된다.
-- 우선 한글 COM `GetTextFile("HWPML2X", "")`로 원본 HWPML2X를 추출한다.
-- HWPML2X 안에서 `TABLE`의 `RowCount`, `ColCount`, `CELL`의 `RowAddr`, `ColAddr`, `ColSpan`, `RowSpan`을 기준으로 목표 셀을 찾고, 빈 `<TEXT CharShape="..."/>` 또는 기존 `<CHAR>`만 교체한다.
-- 편집한 HWPML2X는 한글 COM `SetTextFile(hwpml, "HWPML2X", "")`로 다시 불러온 뒤 `.hwp`로 먼저 저장한다. 필요하면 그 `.hwp`를 다시 열어 `.hwpx`로 저장한다.
-- 검증은 원본과 결과의 표 개수, 주요 `RowCount`/`ColCount`, 주요 텍스트 포함 여부를 함께 확인한다.
-- 이 우회 경로로 만든 `.hwp`/`.hwpx`에는 파일명에 `_원본표_완성본`처럼 원본 표 보존 여부가 드러나게 붙인다.
+- HWPML2X 추출, `SetTextFile`, 임시/최종 HWP 저장은 기본으로 사용하지 않는다.
+- `md2hwpx.py`로 새 HWPX 표를 다시 그리는 방식도 사용하지 않는다. 사용자가 명시적으로 "새 양식으로 다시 만들어도 됨"이라고 한 경우를 제외하면 기존 표가 깨진 산출물이 된다.
+- 가능한 선택지는 사용자가 변환된 HWPX를 제공하기, 비기본 HWPML2X 복구 경로를 승인하기, 새 HWPX 양식 재작성을 승인하기 중 하나로 정리해 제안한다.
 
 ## 텍스트 추출
 
@@ -97,7 +107,7 @@ $code | python -c "import sys; exec(sys.stdin.read().lstrip(chr(0xfeff)))"
 
 개인정보 동의서, 확인서, 신청서처럼 하단에 `성명 : ... (인 또는 서명)` 문구가 있는 양식은 다음 순서가 안정적이다.
 
-1. 원본 `.hwp`는 한글 COM `Open` + `SaveAs(..., "HWPX")`로 먼저 HWPX 작업본을 만든다.
+1. 원본 `.hwp`는 한글 COM `Open` + `SaveAs(..., "HWPX")`로 먼저 임시 HWPX 작업본을 만든다.
 2. 텍스트와 서명 위치는 `clone_form.py --analyze`와 `Contents/section0.xml`의 실제 문단/run을 함께 확인한다.
 3. 날짜, 생년월일, 성명 같은 단순 값은 해당 `<hp:t>` 또는 문단 단위로 치환한다.
 4. 서명 이미지는 우선 `scripts/insert_signature_hwpx.py`로 넣는다. PowerShell에서 긴 XML 문자열을 `python -c`로 조립하지 않는다. 따옴표가 제거되어 XML이 깨지기 쉽다.
@@ -111,13 +121,13 @@ python "$SKILL_DIR\scripts\insert_signature_hwpx.py" "원본.hwpx" "서명.png" 
 6. `--name`으로 `성명 : 이름` 문단을 찾지 못하면 `--anchor "생년월일 : 1990.01.01          성명 : 홍길동"`처럼 실제 하단 문단의 고유 텍스트를 넘긴다. 동의서 안에는 표 헤더의 `성명`도 있으므로 기본 검색은 마지막 일치 문단을 사용한다.
 7. 표시 크기는 기본 25mm 폭이다. 양식의 성명 줄이 좁으면 `--width-mm 20`, 넓으면 `--width-mm 30`처럼 조정한다.
 8. 스크립트는 ZIP에 `BinData/signature.png`를 추가하고, `Contents/content.hpf`의 `<opf:manifest>`에 이미지 항목을 등록하며, 서명 자리에는 완전한 `<hp:pic>` 구조와 뒤따르는 `<hp:t/>`를 넣는다.
-9. 최종본은 가능하면 한글 COM으로 한 번 `Open` + `SaveAs(..., "HWPX")`를 수행해 미리보기와 내부 리소스명을 한글이 정리하게 한다. 단, COM 이미지 삽입 자체에는 의존하지 않는다.
+9. 최종본은 한글 COM으로 `Open` + `SaveAs(..., "HWPX")` 재저장하지 않는다. `validate.py`, `clone_form.py --analyze`, `Contents/section0.xml`, `Contents/content.hpf`, 주요 값 포함 여부로 검증한다.
 
 주의:
 
 - 서명 이미지는 원본 PNG의 투명 배경을 그대로 사용한다.
-- `Preview/PrvText.txt`는 COM으로 다시 저장하기 전까지 최신 내용이 아닐 수 있다. 최종 검증은 `Contents/section0.xml`과 `clone_form.py --analyze` 결과를 우선한다.
-- COM으로 다시 저장하면 `BinData/signature.png`가 `BinData/image1.png`처럼 바뀔 수 있다. 검증할 때 파일명보다 `content.hpf` 등록 여부, 이미지 개수, 문서 미리보기를 확인한다.
+- `Preview/PrvText.txt`는 최신 내용이 아닐 수 있다. 최종 검증은 `Contents/section0.xml`과 `clone_form.py --analyze` 결과를 우선한다.
+- COM 재저장은 기본 금지이므로 `BinData/signature.png` 파일명을 정리하려고 다시 저장하지 않는다. 검증할 때 파일명보다 `content.hpf` 등록 여부, 이미지 개수, XML 참조를 확인한다.
 - 원본 `.hwp`에는 쓰지 말고, 변환본과 최종본을 별도 경로로 만든다.
 - 직접 ZIP을 다시 쓸 때 `mimetype` 엔트리는 `ZIP_STORED`로 유지한다.
 - `scripts/insert_signature_hwpx.py`를 고쳐야 할 때도 텍스트/XML 파일은 `encoding="utf-8"` 또는 명시적 `.decode("utf-8")`/`.encode("utf-8")`로 처리한다.
@@ -153,6 +163,8 @@ python "$SKILL_DIR\scripts\insert_signature_hwpx.py" "원본.hwpx" "서명.png" 
 
 ## 검증
 
+기본 검증은 구조와 주요 입력값 확인으로 끝낸다. 검증용 HWPX를 별도로 만들거나, 완성본을 한컴 COM으로 재저장하거나, PDF/이미지 렌더링을 수행하지 않는다.
+
 - `python scripts/validate.py 결과.hwpx`
 - `clone_form.py --analyze 결과.hwpx`
 - `python scripts/verify_hwpx.py --source 원본.hwpx --result 결과.hwpx`
@@ -161,5 +173,5 @@ python "$SKILL_DIR\scripts\insert_signature_hwpx.py" "원본.hwpx" "서명.png" 
 - 원본 대비 표 개수, 셀 주소, 병합, 셀 크기, 여백, 문단 수, run 수를 비교한다. 특히 `verify_hwpx.py`가 통과해도 남은 기존 텍스트나 중복 텍스트는 직접 확인한다.
 - 이전 양식의 고유 placeholder나 예시 문구가 남았는지 검색한다. 예: `(     분)`, `○○`, 원본 예시 문장.
 - 검증 경고를 없애려고 section 크기 보정용 XML 주석, 의미 없는 빈 run, 임의 문단을 추가하지 않는다. 그런 보정은 통과처럼 보이지만 제출본 품질을 낮춘다.
-- 가능하면 한글 COM으로 최종 HWPX를 실제 열기 검증한다: `Open(path, "", "forceopen:true")`가 `True`인지 확인한다.
-- PDF/이미지 렌더링 검증은 기본으로 수행하지 않는다. 사용자가 요청했거나, 최종 제출본에서 글자 겹침·잘림 위험이 높다고 판단될 때만 제안하거나 수행한다.
+- 사용자가 요청했거나 최종 제출본에서 글자 겹침·잘림 위험이 높다고 판단될 때만 시각 검증을 제안한다. 이 경우에도 먼저 사용자에게 말하고, HWPX를 열더라도 재저장하지 않는다.
+- 검증 뒤 임시 변환본, 임시 압축 해제 폴더, 분석용 임시 파일을 삭제한다.
