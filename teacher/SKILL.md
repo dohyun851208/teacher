@@ -60,15 +60,16 @@ If direct HWP-to-HWPX conversion fails, do not automatically switch to an HWPML2
 
 For `.hwpx`, analyze before editing:
 
-```bash
-python scripts/clone_form.py --analyze input.hwpx
-python scripts/text_extract.py input.hwpx --include-tables
+```powershell
+& $py "scripts/clone_form.py" --analyze "input.hwpx"
 ```
+
+Confirm table text and key values by inspecting `Contents/section0.xml` directly. Use `scripts/text_extract.py` only as optional extra validation when `python-hwpx` is already available; it must not be part of the default path.
 
 For simple form text replacement, preserve the ZIP/XML structure:
 
-```bash
-python scripts/clone_form.py input.hwpx output.hwpx --map map.json
+```powershell
+& $py "scripts/clone_form.py" "input.hwpx" "output.hwpx" --map "map.json"
 ```
 
 For blank table cells, inspect actual cell addresses in `Contents/section0.xml` and write only the target cell content. Prefer preserving each target cell's original paragraph/run structure and replacing text inside existing runs; clear leftover runs so stale text cannot remain. Keep the final deliverable as `.hwpx`; do not save back to `.hwp`.

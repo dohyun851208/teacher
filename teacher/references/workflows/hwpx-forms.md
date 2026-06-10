@@ -13,7 +13,7 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 3. 단순 기존 텍스트 치환이면 `clone_form.py --map map.json`을 사용한다.
 4. 빈 표 셀을 채워야 하면 `Contents/section0.xml`의 표/셀 구조를 분석하고 XML을 직접 수정한다.
 5. 편집 결과는 최종 산출물로 `.hwpx`만 유지한다. 다시 `.hwp`로 저장하지 않는다.
-6. `scripts/validate.py` 구조 검증과 표 포함 텍스트 추출로 주요 값이 유지되는지 확인한다.
+6. `scripts/validate.py` 구조 검증과 `Contents/section0.xml` 직접 확인으로 주요 값이 유지되는지 확인한다.
 7. 임시 변환본, 압축 해제 폴더, 임시 스크립트 산출물은 삭제한다.
 
 기본으로 하지 않을 것:
@@ -54,13 +54,15 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 ## 텍스트 추출
 
 - 빠른 확인: `Preview/PrvText.txt`
-- 정확한 확인: `Contents/section0.xml`의 `<hp:t>` 텍스트
-- 표 양식 확인: `python scripts/text_extract.py 결과.hwpx --include-tables`
-- `text_extract.py` 기본값은 표 내부 텍스트를 건너뛴다. 표 양식에서 제목만 추출되면 실패로 단정하지 말고 `--include-tables` 또는 `--format markdown`으로 다시 확인한다.
+- 기본 확인: ZIP 안의 `Contents/section0.xml`을 열고 `<hp:t>` 텍스트, 표 셀 주소, 입력값 포함 여부를 직접 확인한다.
+- `scripts/text_extract.py`는 선택 검증이다. 이 스크립트는 `python-hwpx`가 없으면 실패할 수 있으므로 기본 경로에 넣지 않는다.
+- 이미 `python-hwpx`가 설치되어 있고 표 텍스트를 추가로 보고 싶을 때만 `& $py "scripts/text_extract.py" "결과.hwpx" --include-tables`를 사용한다.
 
 ## PowerShell 임시 Python 실행
 
 PowerShell에서 여러 줄 Python 코드를 실행할 때는 Bash식 heredoc 또는 긴 `python -c "..."` 인자 전달을 피한다. BOM, 따옴표, 한글 경로 때문에 분석 단계가 실패하기 쉽다.
+
+Codex 데스크톱에서는 먼저 `load_workspace_dependencies`로 번들 Python 경로를 확인하고 `$py`에 담아 실행한다. bare `python`을 기본 예시로 쓰지 않는다. HWP COM 변환 fast path에는 `pywin32`/`win32com`이 필요하고, XML 조작 도구에는 `lxml`이 필요할 수 있으므로 번들 Python 또는 해당 모듈이 있는 고정 Python을 사용한다.
 
 안정적인 실행 템플릿:
 
@@ -69,11 +71,12 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 chcp 65001
 $env:PYTHONIOENCODING='utf-8'
+$py = "<load_workspace_dependencies로 확인한 python.exe 경로>"
 $code = @'
 import sys
 print("ok")
 '@
-$code | python -c "import sys; exec(sys.stdin.read().lstrip(chr(0xfeff)))"
+$code | & $py -c "import sys; exec(sys.stdin.read().lstrip(chr(0xfeff)))"
 ```
 
 같은 분석 코드를 반복할 때는 임시 인자 조립을 계속 고치지 말고 스크립트 파일 또는 기존 `scripts/` 도구로 옮긴다.
@@ -115,18 +118,18 @@ $code | python -c "import sys; exec(sys.stdin.read().lstrip(chr(0xfeff)))"
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-python "$SKILL_DIR\scripts\insert_signature_hwpx.py" "원본.hwpx" "서명.png" --name "홍길동"
+& $py "$SKILL_DIR\scripts\insert_signature_hwpx.py" "원본.hwpx" "서명.png" --name "홍길동"
 ```
 
 6. `--name`으로 `성명 : 이름` 문단을 찾지 못하면 `--anchor "생년월일 : 1990.01.01          성명 : 홍길동"`처럼 실제 하단 문단의 고유 텍스트를 넘긴다. 동의서 안에는 표 헤더의 `성명`도 있으므로 기본 검색은 마지막 일치 문단을 사용한다.
 7. 표시 크기는 기본 25mm 폭이다. 양식의 성명 줄이 좁으면 `--width-mm 20`, 넓으면 `--width-mm 30`처럼 조정한다.
 8. 스크립트는 ZIP에 `BinData/signature.png`를 추가하고, `Contents/content.hpf`의 `<opf:manifest>`에 이미지 항목을 등록하며, 서명 자리에는 완전한 `<hp:pic>` 구조와 뒤따르는 `<hp:t/>`를 넣는다.
-9. 최종본은 한글 COM으로 `Open` + `SaveAs(..., "HWPX")` 재저장하지 않는다. `validate.py`, `clone_form.py --analyze`, `Contents/section0.xml`, `Contents/content.hpf`, 주요 값 포함 여부로 검증한다.
+9. 최종본은 한글 COM으로 `Open` + `SaveAs(..., "HWPX")` 재저장하지 않는다. `validate.py`, `Contents/section0.xml`, `Contents/content.hpf`, 주요 값 포함 여부로 검증한다.
 
 주의:
 
 - 서명 이미지는 원본 PNG의 투명 배경을 그대로 사용한다.
-- `Preview/PrvText.txt`는 최신 내용이 아닐 수 있다. 최종 검증은 `Contents/section0.xml`과 `clone_form.py --analyze` 결과를 우선한다.
+- `Preview/PrvText.txt`는 최신 내용이 아닐 수 있다. 최종 검증은 `Contents/section0.xml`과 주요 값 직접 확인을 우선한다.
 - COM 재저장은 기본 금지이므로 `BinData/signature.png` 파일명을 정리하려고 다시 저장하지 않는다. 검증할 때 파일명보다 `content.hpf` 등록 여부, 이미지 개수, XML 참조를 확인한다.
 - 원본 `.hwp`에는 쓰지 말고, 변환본과 최종본을 별도 경로로 만든다.
 - 직접 ZIP을 다시 쓸 때 `mimetype` 엔트리는 `ZIP_STORED`로 유지한다.
@@ -165,12 +168,12 @@ python "$SKILL_DIR\scripts\insert_signature_hwpx.py" "원본.hwpx" "서명.png" 
 
 기본 검증은 구조와 주요 입력값 확인으로 끝낸다. 검증용 HWPX를 별도로 만들거나, 완성본을 한컴 COM으로 재저장하거나, PDF/이미지 렌더링을 수행하지 않는다.
 
-- `python scripts/validate.py 결과.hwpx`
-- `clone_form.py --analyze 결과.hwpx`
-- `python scripts/verify_hwpx.py --source 원본.hwpx --result 결과.hwpx`
-- `python scripts/text_extract.py 결과.hwpx --include-tables`
+- `& $py "scripts/validate.py" "결과.hwpx"`
+- ZIP 안의 `Contents/section0.xml`에서 주요 입력값, 표 셀 주소, 병합, 문단/run 구조를 직접 확인한다.
 - 주요 값 count 확인
-- 원본 대비 표 개수, 셀 주소, 병합, 셀 크기, 여백, 문단 수, run 수를 비교한다. 특히 `verify_hwpx.py`가 통과해도 남은 기존 텍스트나 중복 텍스트는 직접 확인한다.
+- 원본 대비 표 개수, 셀 주소, 병합, 셀 크기, 여백, 문단 수, run 수를 비교한다. 남은 기존 텍스트나 중복 텍스트는 직접 확인한다.
+- `scripts/verify_hwpx.py`는 구조 차이가 의심될 때만 선택 검증으로 사용한다.
+- `scripts/text_extract.py`는 `python-hwpx`가 이미 있을 때만 선택 검증으로 사용한다.
 - 이전 양식의 고유 placeholder나 예시 문구가 남았는지 검색한다. 예: `(     분)`, `○○`, 원본 예시 문장.
 - 검증 경고를 없애려고 section 크기 보정용 XML 주석, 의미 없는 빈 run, 임의 문단을 추가하지 않는다. 그런 보정은 통과처럼 보이지만 제출본 품질을 낮춘다.
 - 사용자가 요청했거나 최종 제출본에서 글자 겹침·잘림 위험이 높다고 판단될 때만 시각 검증을 제안한다. 이 경우에도 먼저 사용자에게 말하고, HWPX를 열더라도 재저장하지 않는다.
