@@ -1,6 +1,6 @@
 ---
 name: teacher
-description: Create, fill, and verify Korean school teacher administrative documents and teaching materials. Use when working with HWP/HWPX forms, XLS/XLSX templates, applications, official letters, reports, resumes, achievement statements, meeting minutes, budget requests, training or career lists, HTML-based class or training slides, any current folder or ancestor/project folder whose name ends with "(AI)" or "(ai)" case-insensitively, or an external single-file Korean school document path supplied by the user, especially when preserving form layout, merged cells, HWPX XML structure, signatures, or browser-presented slide decks matters.
+description: Create, fill, and verify Korean school teacher administrative documents and teaching materials. Use when any referenced target file path, filename, or attachment ends in .hwp, .hwpx, .xls, or .xlsx; OR when working with HWP/HWPX forms, XLS/XLSX templates, applications, official letters, reports, resumes, achievement statements, meeting minutes, budget requests, training or career lists, HTML-based class or training slides; OR when the current folder or any ancestor/project folder name ends with "(AI)" or "(ai)" case-insensitively; OR when an external single-file Korean school document path is supplied, especially when preserving form layout, merged cells, HWPX XML structure, signatures, or browser-presented slide decks matters.
 ---
 
 # Teacher
@@ -16,6 +16,7 @@ For first-time `(AI)` teacher workspaces, folder indexing, source-to-Markdown su
 ## Context And Privacy
 
 - Treat user-provided project files as the source of truth for personal data, evidence files, forms, and design references.
+- Treat `(AI)` workspace detection and target-file extension detection as OR conditions: follow this skill if the current/ancestor work folder ends with `(AI)` or if the user request references any target path, filename, or attachment ending in `.hwp`, `.hwpx`, `.xls`, or `.xlsx`, even outside an `(AI)` workspace.
 - If the user gives a target file or folder path, decide the teacher workspace from that target path before using the current shell folder. If the target path or one of its ancestor folders ends with `(AI)` case-insensitively, use the nearest such `(AI)` folder as the work folder.
 - Interpret project-internal paths as relative to the chosen work folder unless the user explicitly provides another external absolute path.
 - Prefer structured Markdown in the user's `docs/` folder before opening original evidence files.

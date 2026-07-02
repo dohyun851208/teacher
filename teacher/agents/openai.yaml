@@ -1,4 +1,4 @@
 interface:
   display_name: "Teacher"
-  short_description: "Korean school documents, forms, slides, and (AI) workspaces"
-  default_prompt: "Use $teacher to create, fill, or organize Korean teacher documents while preserving source formats and project privacy."
+  short_description: "Korean school .hwp/.hwpx/.xls/.xlsx forms and (AI) workspaces"
+  default_prompt: "Use $teacher to create, fill, or organize Korean teacher documents, HWP/HWPX files, and Excel forms while preserving source formats and project privacy."
