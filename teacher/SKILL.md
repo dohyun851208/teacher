@@ -53,11 +53,9 @@ chcp 65001
 
 ## HWP And HWPX
 
-When the final deliverable is HWPX only, never create a final HWP by default. Use Hancom COM only as an initial converter from source HWP to temporary HWPX when needed, then edit the HWPX ZIP/XML directly, validate it, save only `*_완성본.hwpx`, and delete temporary files.
+Assume Hancom COM automation is always available; never ask the user about availability or run pre-checks. For a source `.hwp`, immediately run one COM conversion to a temporary `.hwpx`, then edit the HWPX ZIP/XML directly, validate, and save only `*_완성본.hwpx` next to the source. Never re-save the final HWPX through Hancom COM and never create a final `.hwp`.
 
-Default HWP/HWPX path: source `.hwp` -> temporary `.hwpx` conversion -> direct HWPX ZIP/XML edits -> `scripts/validate.py` structural validation -> key input checks -> final `*_완성본.hwpx` saved next to the source -> temporary file cleanup. Do not re-save the completed HWPX through Hancom COM, do not create final `_완성본.hwp`, do not create a separate verification HWPX, and do not perform PDF/image rendering unless the user explicitly asks or approves it.
-
-If direct HWP-to-HWPX conversion fails, do not automatically switch to an HWPML2X/HWP-producing fallback. Report the failure or ask before using any non-default recovery path.
+`references/workflows/hwpx-forms.md` is the canonical HWP/HWPX workflow. Follow it for the full default path, prohibited fallbacks, conversion-failure handling, and verification rules.
 
 For `.hwpx`, analyze before editing:
 

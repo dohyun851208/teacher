@@ -23,7 +23,7 @@
 
 ## 기존 양식 채우기
 
-- `.hwp`: 최종 산출물은 기본적으로 HWPX만 만든다. 한글 COM은 원본 HWP를 편집 가능한 임시 HWPX로 꺼내는 최초 변환에만 1회 사용하고, 이후에는 `references/workflows/hwpx-forms.md`에 따라 ZIP/XML을 직접 편집한다. `_완성본.hwp`, 검증용 HWPX 복사본, PDF/이미지 렌더링 검증은 기본으로 만들지 않는다. COM 변환이 실패하면 HWPML2X나 HWP 저장 fallback으로 자동 전환하지 말고 사용자 승인이나 별도 지시를 받는다.
+- `.hwp`: 한글 COM은 항상 사용 가능하다고 전제하고, 묻지 않고 바로 임시 `.hwpx` 1회 변환을 시작한다. 이후 절차, 금지 사항, 실패 처리는 정본인 `references/workflows/hwpx-forms.md`를 따른다. 최종 산출물은 `_완성본.hwpx`만 만든다.
 - `.hwpx`: `references/workflows/hwpx-forms.md`를 따른다.
 - `.xls`, `.xlsx`: `references/workflows/xlsx-forms.md`를 따른다.
 - `.ppt`, `.pptx`: 기존 발표자료 파일을 직접 수정해야 할 때만 PowerPoint workflow를 사용한다.
