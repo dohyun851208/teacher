@@ -39,7 +39,7 @@ chcp 65001
 
 1. Read `references/routing.md`.
 2. Choose the output-format workflow first:
-   - HWP/HWPX forms or documents: `references/kordoc.md` for the default `kordoc patch` path; `references/workflows/hwpx-forms.md` for the COM/XML exception path
+   - HWP/HWPX forms or HWPX documents: `references/workflows/hwpx-forms.md`
    - XLS/XLSX forms or spreadsheet tables: `references/workflows/xlsx-forms.md`
    - HTML slides and training/class materials: `references/workflows/html-slides.md`
    - Existing `.ppt`/`.pptx` files: use a PowerPoint workflow only when the user explicitly asks to edit the provided file.
@@ -49,30 +49,39 @@ chcp 65001
    - Apple-style preset: `references/html-slide-apple-style.md`
    - **My Slides preset (Korean Edu Pastel, default for PPT/slide requests): `references/my-slides/SKILL.md`** — pastel blue-grey background, cream cards, Plus Jakarta Sans, drawing canvas, inline-edit dot toggle, viewport/accessibility safeguards. Use this by default when the user asks for slides, PPT, presentation, training, or class materials, unless they specify a different style.
 5. Preserve original formatting, merged cells, tables, images, margins, fonts, and alignment unless the user asks for a redesign.
-6. Verify the result by re-extracting text (`kordoc` to Markdown) and confirming the key values landed. Run structural validation and extra key-value checks only when you did direct HWPX XML editing — not PDF/image rendering or extra HWPX verification copies.
+6. Verify the result by extracting text, checking structure, or using the format-specific workflow. For HWPX-only deliverables, use structural validation and key value checks by default, not PDF/image rendering or extra HWPX verification copies.
 
 ## HWP And HWPX
 
-The default engine is **kordoc** (`references/kordoc.md`), run via `npx -y kordoc@^3`. It reads and patches `.hwp`/`.hwpx` (plus PDF/DOCX/XLS) locally with no Hancom Office or COM dependency, so documents never leave the machine. Do not run availability pre-checks — call `npx -y kordoc@^3` directly, and only guide the user to install Node.js 18+ if `node`/`npx` is not found.
+Assume Hancom COM automation is always available; never ask the user about availability or run pre-checks. For a source `.hwp`, immediately run one COM conversion to a temporary `.hwpx`, then edit the HWPX ZIP/XML directly, validate, and save only `*_완성본.hwpx` next to the source. Never re-save the final HWPX through Hancom COM and never create a final `.hwp`.
 
-Default path — fill or edit an existing form with `kordoc patch`:
+`references/workflows/hwpx-forms.md` is the canonical HWP/HWPX workflow. Follow it for the full default path, prohibited fallbacks, conversion-failure handling, and verification rules.
+
+For `.hwpx`, analyze before editing:
 
 ```powershell
-npx -y kordoc@^3 "input.hwpx" -o "input.md"        # 1) parse to Markdown
-# 2) edit content only in input.md; keep the table/structure, do not summarize
-npx -y kordoc@^3 patch "input.hwpx" "input.md" -o "output_완성본.hwpx"
+& $py "scripts/clone_form.py" --analyze "input.hwpx"
 ```
 
-`patch` preserves the original fonts, tables, `rowspan`/`colspan`, objects, and layout, changing only text. For a `.hwp` source it produces a `.hwp` via binary in-place patch — **no conversion needed**. Never send a `.hwp` straight to `kordoc fill`: preserve mode is HWPX-only, so `.hwp` falls into a parse-and-rebuild path that breaks tables — fill `.hwp` with `patch`. Verify by re-extracting the result to Markdown and confirming the key values landed, not by exit code alone. Do not add rows/columns, change font size, or redesign layout by default, and do not arbitrarily summarize content that is too long for a cell.
+Confirm table text and key values by inspecting `Contents/section0.xml` directly. Use `scripts/text_extract.py` only as optional extra validation when `python-hwpx` is already available; it must not be part of the default path.
 
-For a blank `.hwpx` form, `kordoc fill --dry-run` lists the labels and `kordoc fill -j values.json` fills them (HWPX-only, style-preserving). For stamps or signatures on an `.hwpx`, `kordoc seal` floats the image over an anchor phrase without shifting tables or pages.
+For simple form text replacement, preserve the ZIP/XML structure:
 
-Exception path — `references/workflows/hwpx-forms.md` covers Hancom COM conversion and direct HWPX ZIP/XML editing. Use it only when the source is already `.hwpx` and needs direct XML edits, when the user explicitly approves a `.hwp`→`.hwpx` conversion or structural edit, or when image/signature insertion or an HWPX-only feature cannot be done with a plain patch. That workflow drives the bundled analysis, build, signature, and validation helpers and templates:
+```powershell
+& $py "scripts/clone_form.py" "input.hwpx" "output.hwpx" --map "map.json"
+```
 
-- `scripts/clone_form.py` (`--analyze`), `scripts/build_hwpx.py`, `scripts/md2hwpx.py`
-- `scripts/fix_namespaces.py`, `scripts/insert_signature_hwpx.py`
-- `scripts/validate.py`, `scripts/verify_hwpx.py`
-- `templates/`, `references/hwpx/`
+For blank table cells, inspect actual cell addresses in `Contents/section0.xml` and write only the target cell content. Prefer preserving each target cell's original paragraph/run structure and replacing text inside existing runs; clear leftover runs so stale text cannot remain. Keep the final deliverable as `.hwpx`; do not save back to `.hwp`.
+
+For low-level HWPX creation or repair, use the bundled helpers and templates:
+
+- `scripts/build_hwpx.py`
+- `scripts/md2hwpx.py`
+- `scripts/fix_namespaces.py`
+- `scripts/validate.py`
+- `scripts/verify_hwpx.py`
+- `templates/`
+- `references/hwpx/`
 
 Do not use `md2hwpx.py` or a rebuilt Markdown table as a fallback for filling an existing HWP form unless the user explicitly accepts a redesigned/recreated form. It does not preserve the original table widths, row heights, merged cells, or border details.
 
