@@ -23,9 +23,12 @@
 
 ## 기존 양식 채우기
 
-- `.hwp`: 한글 COM은 항상 사용 가능하다고 전제하고, 묻지 않고 바로 임시 `.hwpx` 1회 변환을 시작한다. 이후 절차, 금지 사항, 실패 처리는 정본인 `references/workflows/hwpx-forms.md`를 따른다. 최종 산출물은 `_완성본.hwpx`만 만든다.
-- `.hwpx`: `references/workflows/hwpx-forms.md`를 따른다.
-- `.xls`, `.xlsx`: `references/workflows/xlsx-forms.md`를 따른다.
+기본 엔진은 `kordoc`이다 (`references/kordoc.md`) — 한컴 오피스·COM 불필요, 로컬 실행이라 문서가 외부로 나가지 않는다. Node 18+가 있으면 사전 점검 없이 바로 `npx -y kordoc@^3 ...`를 쓴다.
+
+- `.hwp`: 기본은 `kordoc patch`다. 원본을 md로 파싱해 내용만 고치고 `patch`로 되돌린다. **원본 포맷을 유지**(`.hwp`→`.hwp`)하므로 변환이 필요 없다. 원본 표의 `rowspan`/`colspan` 구조를 유지하고 텍스트만 바꾼다. 행·열 추가, 글자 크기 수정, 레이아웃 재설계, `.hwp`→`.hwpx` 변환은 기본으로 하지 않는다.
+- `.hwp`에 `kordoc fill`을 직행하지 않는다. preserve 모드가 HWPX 전용이라 `.hwp`는 파싱→재구성 경로로 빠져 표가 깨진다. `.hwp` 양식 채우기는 `patch`로 처리한다.
+- `.hwpx`: 단순 내용 수정은 `kordoc patch`, 빈 서식 채우기는 `kordoc fill`, 도장·서명은 `kordoc seal`(둘 다 HWPX 전용)을 쓴다. 이미지/서명 삽입이나 XML 직접 편집처럼 kordoc으로 처리하기 어려운 구조 편집이 필요하면 `references/workflows/hwpx-forms.md`를 따른다.
+- `.xls`, `.xlsx`: `references/workflows/xlsx-forms.md`를 따른다. 읽기 전용이면 kordoc이 구형 `.xls`까지 Markdown으로 처리한다.
 - `.ppt`, `.pptx`: 기존 발표자료 파일을 직접 수정해야 할 때만 PowerPoint workflow를 사용한다.
 - 양식 성격이 이력서, 공적조서, 신청서이면 `references/teacher-admin-rules.md`에서 해당 내용 규칙도 함께 적용한다.
 
