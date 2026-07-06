@@ -2,6 +2,11 @@
 
 Claude/Codex skill for Korean teacher administrative documents: HWP/HWPX forms, XLS/XLSX templates, official documents, resumes, achievement statements, training/career lists, and HTML-based class or training slides.
 
+## Requirements
+
+- **Node.js 18+** for the default HWP/HWPX engine, [kordoc](https://github.com/chrisryugj/kordoc), invoked via `npx -y kordoc@^3`. It reads and patches `.hwp`/`.hwpx` (and PDF/DOCX/XLS) locally with **no Hancom Office / COM dependency**, so documents never leave the machine. The first call downloads and caches the package.
+- Python is only needed for the exception-path HWPX structure-editing scripts under `teacher/scripts/` (e.g. signature insertion, structural validation).
+
 ## Repository Layout
 
 - `teacher/`: publishable Claude/Codex skill folder
