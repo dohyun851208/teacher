@@ -2,6 +2,12 @@
 
 HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 유지하고 텍스트만 채운다.
 
+## 실행 셸
+
+셸은 스킬이나 대화 세션 전체가 아니라 현재 작업 단위마다 선택한다. `.hwp`/`.hwpx`를 열기, 변환, 편집, 검증하거나 한컴 COM을 호출하는 모든 셸 명령은 PowerShell에서 실행한다. 현재 에이전트가 Bash를 사용 중이면 PowerShell 도구를 선택하고, PowerShell 문법을 Bash로 번역하지 않는다. PowerShell 도구를 직접 선택할 수 없는 환경에서는 단순 명령은 `powershell.exe -NoProfile -Command`, 여러 줄 로직은 파일 쓰기 도구로 만든 UTF-8 `.ps1`과 `powershell.exe -NoProfile -File`로 비대화식 실행한다. 인자 없이 `powershell.exe`를 실행해 대화형 셸을 열지 않는다.
+
+XLSX, 일반 Python, HTML workflow를 수행한 뒤 이 workflow로 돌아오면 PowerShell UTF-8 초기화를 다시 실행한다. 셸 사이에서 현재 디렉터리, `$py`, 환경변수가 유지된다고 가정하지 말고 절대경로를 우선한다.
+
 ## 기본 흐름
 
 최종 산출물이 HWPX일 때의 기본 경로:
@@ -57,8 +63,9 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 - 기본 확인: ZIP 안의 `Contents/section0.xml`을 열고 `<hp:t>` 텍스트, 표 셀 주소, 입력값 포함 여부를 직접 확인한다.
 - `scripts/text_extract.py`는 선택 검증이다. 이 스크립트는 `python-hwpx`가 없으면 실패할 수 있으므로 기본 경로에 넣지 않는다.
 - 이미 `python-hwpx`가 설치되어 있고 표 텍스트를 추가로 보고 싶을 때만 `& $py "scripts/text_extract.py" "결과.hwpx" --include-tables`를 사용한다.
+- 사용자가 제공한 원본은 정상 문서로 간주한다. 콘솔의 한글 깨짐만으로 원본 손상이나 인코딩 오류를 판단하거나 원본을 재인코딩하지 않는다. 명시적 파싱이나 구조 검증도 함께 실패한 경우에만 raw bytes를 확인한다. `.hwp`는 바이너리이고 `.hwpx`는 ZIP 컨테이너이므로 파일 자체를 UTF-8 텍스트로 검사하지 않는다.
 
-## PowerShell 임시 Python 실행
+## PowerShell 실행과 UTF-8
 
 PowerShell에서 여러 줄 Python 코드를 실행할 때는 Bash식 heredoc 또는 긴 `python -c "..."` 인자 전달을 피한다. BOM, 따옴표, 한글 경로 때문에 분석 단계가 실패하기 쉽다.
 
@@ -72,6 +79,7 @@ Codex 데스크톱에서는 먼저 `load_workspace_dependencies`로 번들 Pytho
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 chcp 65001
+$env:PYTHONUTF8='1'
 $env:PYTHONIOENCODING='utf-8'
 $py = "<load_workspace_dependencies로 확인한 python.exe 경로>"
 $code = @'

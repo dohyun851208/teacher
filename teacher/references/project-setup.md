@@ -138,13 +138,33 @@ Codex는 `AGENTS.md`, Claude는 `CLAUDE.md`를 읽는다.
 
 작업 중 생성하거나 수정하는 모든 텍스트 파일은 UTF-8로 저장한다.
 Python으로 파일을 읽거나 쓸 때는 `encoding="utf-8"`을 명시한다.
-PowerShell에서 한국어 경로와 텍스트를 다룰 때는 먼저 아래를 실행한다.
+스킬이나 대화 세션 전체의 셸을 고정하지 말고 현재 작업 단위마다 다시 선택한다.
+`.hwp`, `.hwpx`, 한컴 COM을 열기, 변환, 편집, 검증하는 명령만 PowerShell에서 실행한다.
+XLSX, 일반 Python, HTML 작업은 해당 workflow의 기본 셸을 사용한다.
+셸을 바꿀 때 현재 디렉터리, 인터프리터 변수, 환경변수가 유지된다고 가정하지 않고 절대경로를 우선한다.
+
+사용자가 제공한 한국어 원본 문서는 정상으로 간주한다.
+콘솔 한글 깨짐만으로 원본 손상이나 인코딩 오류를 판단하거나 원본을 재인코딩하지 않는다.
+명시적 파싱이나 구조 검증도 함께 실패한 경우에만 raw bytes를 확인한다.
+
+PowerShell에서 HWP/HWPX 또는 한컴 작업을 시작하거나 재개할 때는 아래를 다시 실행한다.
 
 ```powershell
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 chcp 65001
+$env:PYTHONUTF8 = '1'
+$env:PYTHONIOENCODING = 'utf-8'
 ```
+
+Bash에서 한국어 경로나 텍스트를 다루는 Python 명령은 환경변수가 다음 호출까지 유지된다고 가정하지 말고 명령마다 UTF-8 접두어를 붙인다.
+
+```bash
+PYTHONUTF8=1 PYTHONIOENCODING=utf-8 python scripts/example.py
+```
+
+출력 인코딩이 불명확할 때는 한글이 포함된 중요 `.md`, `.json`, `.py`, `.xml` 파일을 `>` 리다이렉션으로 만들지 않는다.
+에이전트의 파일 쓰기 도구 또는 Python의 `open(..., encoding="utf-8")`/`Path.write_text(..., encoding="utf-8")`를 사용한다.
 
 이 폴더는 `teacher` skill workflow를 따른다.
 먼저 `docs/`의 Markdown 자료를 읽고, 부족하거나 최신성이 의심될 때만 원본 파일을 연다.

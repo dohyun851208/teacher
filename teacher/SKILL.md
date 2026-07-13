@@ -26,13 +26,19 @@ For first-time `(AI)` teacher workspaces, folder indexing, source-to-Markdown su
 - Do not scan or read every original file during first setup. Start from folder names, filenames, and extensions; open source files only when they are relevant to the user's current task or a requested summary.
 - Use `references/profile-schema.md` as the recommended private-project data layout.
 - Do not copy actual personal data, signatures, ID cards, certificates, bankbook images, or completed output files into this skill.
+- Select the shell for the current operation, not for the whole skill or conversation. Use PowerShell for every shell command that opens, converts, edits, or validates `.hwp`/`.hwpx`, or invokes Hancom COM. Re-select when the target format changes; use the current workflow's shell for XLS/XLSX, general Python, and HTML work.
+- Do not assume the working directory, interpreter variables, or environment variables persist when changing shells. Prefer absolute paths and repeat the HWP/HWPX PowerShell UTF-8 bootstrap whenever that workflow resumes.
+- Treat user-provided Korean source documents as valid by default. Garbled console output alone is a display or decoding issue, not evidence of source corruption. Do not re-encode or overwrite the source; inspect raw bytes only when explicit parsing or structural validation also fails.
 - Save created or modified text files as UTF-8. In Python, pass `encoding="utf-8"` whenever reading or writing text.
-- In PowerShell sessions that handle Korean paths or text, set UTF-8 output first:
+- In Bash commands that run Python with Korean paths or text, use the per-command prefix `PYTHONUTF8=1 PYTHONIOENCODING=utf-8`; do not assume an earlier `export` persists. When the producer's encoding is unclear, do not create Korean text files through `>` redirection; use the agent's file-writing tool or Python with explicit UTF-8 instead.
+- At the start of each PowerShell HWP/HWPX operation, set UTF-8 explicitly:
 
 ```powershell
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 chcp 65001
+$env:PYTHONUTF8 = '1'
+$env:PYTHONIOENCODING = 'utf-8'
 ```
 
 ## Workflow Routing
