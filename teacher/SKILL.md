@@ -59,7 +59,11 @@ $env:PYTHONIOENCODING = 'utf-8'
 
 ## HWP And HWPX
 
-Assume Hancom COM automation is always available; never ask the user about availability or run pre-checks. For a source `.hwp`, immediately run one COM conversion to a temporary `.hwpx`, then edit the HWPX ZIP/XML directly, validate, and save only `*_완성본.hwpx` next to the source. Never re-save the final HWPX through Hancom COM and never create a final `.hwp`.
+Assume Hancom COM automation is always available; never ask the user about availability or run pre-checks. For a source `.hwp`, immediately run one COM conversion to a temporary `.hwpx` with `scripts/hwp_to_hwpx.py`, then edit the HWPX ZIP/XML directly, validate, and save only `*_완성본.hwpx` next to the source. Never re-save the final HWPX through Hancom COM and never create a final `.hwp`.
+
+```powershell
+& $py "scripts/hwp_to_hwpx.py" "원본.hwp" -o "임시작업본.hwpx"
+```
 
 `references/workflows/hwpx-forms.md` is the canonical HWP/HWPX workflow. Follow it for the full default path, prohibited fallbacks, conversion-failure handling, and verification rules.
 
@@ -77,7 +81,14 @@ For simple form text replacement, preserve the ZIP/XML structure:
 & $py "scripts/clone_form.py" "input.hwpx" "output.hwpx" --map "map.json"
 ```
 
-For blank table cells, inspect actual cell addresses in `Contents/section0.xml` and write only the target cell content. Prefer preserving each target cell's original paragraph/run structure and replacing text inside existing runs; clear leftover runs so stale text cannot remain. Keep the final deliverable as `.hwpx`; do not save back to `.hwp`.
+For filling table cells by address (empty or already filled), use the bundled filler as the default path. `--list` prints every table and cell address with its current text; `--map` fills cells from a JSON map, then automatically reports a structure comparison and per-cell PASS/FAIL — no separate verification pass needed:
+
+```powershell
+& $py "scripts/fill_cells.py" "input.hwpx" --list
+& $py "scripts/fill_cells.py" "input.hwpx" "output.hwpx" --map "cells.json"
+```
+
+Fall back to editing `Contents/section0.xml` by hand only when `fill_cells.py` cannot express the change (for example mixed character styles inside one cell). When editing manually, prefer preserving each target cell's original paragraph/run structure and replacing text inside existing runs; clear leftover runs so stale text cannot remain. Keep the final deliverable as `.hwpx`; do not save back to `.hwp`.
 
 For low-level HWPX creation or repair, use the bundled helpers and templates:
 

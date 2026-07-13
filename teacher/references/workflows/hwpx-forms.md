@@ -12,12 +12,12 @@ XLSX, 일반 Python, HTML workflow를 수행한 뒤 이 workflow로 돌아오면
 
 최종 산출물이 HWPX일 때의 기본 경로:
 
-원본 `.hwp` -> 임시 `.hwpx` 변환 -> HWPX ZIP/XML 직접 편집 -> `validate.py` 구조 검증 -> 주요 입력값 확인 -> 최종 `*_완성본.hwpx` 저장 -> 임시 파일 삭제
+원본 `.hwp` -> `hwp_to_hwpx.py`로 임시 `.hwpx` 변환 -> `fill_cells.py --list`로 셀 주소 확인 -> `cells.json` 작성 -> `fill_cells.py --map`으로 채우기(자동 검증 포함) -> `validate.py` 구조 검증 -> 최종 `*_완성본.hwpx` 저장 -> 임시 파일 삭제
 
-1. `.hwp` 원본은 한글 COM으로 임시 `.hwpx` 작업본을 1회 만든다. 원본이 이미 `.hwpx`이면 원본을 덮어쓰지 말고 복사본을 작업본으로 둔다.
-2. `scripts/clone_form.py --analyze 작업본.hwpx`로 문단, 표, 텍스트 조각을 확인한다.
+1. `.hwp` 원본은 `scripts/hwp_to_hwpx.py`(한글 COM)로 임시 `.hwpx` 작업본을 1회 만든다. 원본이 이미 `.hwpx`이면 원본을 덮어쓰지 말고 복사본을 작업본으로 둔다.
+2. `scripts/fill_cells.py --list 작업본.hwpx`로 표 인덱스, 셀 주소, 현재 텍스트를 확인한다. 문단·run 구조까지 봐야 하면 `scripts/clone_form.py --analyze`를 함께 쓴다.
 3. 단순 기존 텍스트 치환이면 `clone_form.py --map map.json`을 사용한다.
-4. 빈 표 셀을 채워야 하면 `Contents/section0.xml`의 표/셀 구조를 분석하고 XML을 직접 수정한다.
+4. 표 셀 채우기(빈 셀·치환 모두)는 `scripts/fill_cells.py --map cells.json`을 기본으로 사용한다. 스크립트가 표현하지 못하는 편집(한 셀 안 서식 혼합 등)만 `Contents/section0.xml`을 직접 수정한다.
 5. 편집 결과는 최종 산출물로 `.hwpx`만 유지한다. 다시 `.hwp`로 저장하지 않는다.
 6. `scripts/validate.py` 구조 검증과 `Contents/section0.xml` 직접 확인으로 주요 값이 유지되는지 확인한다.
 7. 임시 변환본, 압축 해제 폴더, 임시 스크립트 산출물은 삭제한다.
@@ -32,6 +32,16 @@ XLSX, 일반 Python, HTML workflow를 수행한 뒤 이 workflow로 돌아오면
 ## HWP를 임시 HWPX로 변환
 
 한글 COM 자동화 객체는 항상 사용 가능하다고 전제한다. 사용 가능 여부를 사용자에게 묻거나 사전 점검 코드를 돌리지 말고 바로 변환을 시작한다. 이는 최종 HWP를 만드는 과정이 아니라, 원본 HWP를 편집 가능한 HWPX로 꺼내는 1회 변환이다.
+
+표준 실행은 번들 스크립트다. 변환 코드를 손으로 다시 쓰지 않는다:
+
+```powershell
+& $py "scripts/hwp_to_hwpx.py" "원본.hwp" -o "임시작업본.hwpx"
+```
+
+성공 판정은 스크립트의 `OK`/`FAIL` 출력(출력 파일 존재 + 크기)으로 한다. COM 코드를 직접 써야 할 때는 `win32com.client.Dispatch("HWPFrame.HwpObject")`를 사용한다. `gencache.EnsureDispatch`는 첫 실행에서 캐시 재생성 중 `ImportError: cannot import name '_get_good_object_'` 같은 경고를 출력할 수 있는데, 변환 성공 여부와 무관한 무해한 메시지다. 이 경고만 보고 실패로 판단하거나 재시도하지 않는다.
+
+수동 COM 변환 절차(참고):
 
 1. 한글 COM 객체를 만들고 창을 숨긴다.
 2. `RegisterModule("FilePathCheckDLL", "FilePathCheckerModule")`를 먼저 호출한다.
@@ -73,6 +83,8 @@ PowerShell에서 여러 줄 Python 코드를 실행할 때는 Bash식 heredoc �
 
 Codex 데스크톱에서는 먼저 `load_workspace_dependencies`로 번들 Python 경로를 확인하고 `$py`에 담아 실행한다. bare `python`을 기본 예시로 쓰지 않는다. HWP COM 변환 fast path에는 `pywin32`/`win32com`이 필요하고, XML 조작 도구에는 `lxml`이 필요할 수 있으므로 번들 Python 또는 해당 모듈이 있는 고정 Python을 사용한다.
 
+Claude Code에는 `load_workspace_dependencies`가 없다. PowerShell에서 `(Get-Command python).Source`로 확인한 python.exe 경로를 `$py`로 사용한다(pywin32가 설치된 Python이어야 한다). 존재하지 않는 도구를 찾느라 멈추지 않는다.
+
 안정적인 실행 템플릿:
 
 ```powershell
@@ -92,6 +104,30 @@ $code | & $py -c "import sys; exec(sys.stdin.read().lstrip(chr(0xfeff)))"
 같은 분석 코드를 반복할 때는 임시 인자 조립을 계속 고치지 말고 스크립트 파일 또는 기존 `scripts/` 도구로 옮긴다.
 
 ## 빈 셀 채우기
+
+기본 경로는 `scripts/fill_cells.py`다. 셀 주소 확인, 채우기, 구조 비교, 값 검증을 한 번에 처리하므로 채우기 코드를 손으로 다시 쓰지 않는다:
+
+```powershell
+& $py "scripts/fill_cells.py" "작업본.hwpx" --list
+& $py "scripts/fill_cells.py" "작업본.hwpx" "결과.hwpx" --map "cells.json"
+```
+
+`cells.json` 형식 — `text`의 `\n`은 문단 분리, `""`는 셀 비우기, 표 인덱스는 `--list` 출력의 `[table N]`:
+
+```json
+{
+  "table": 1,
+  "cells": [
+    {"col": 0, "row": 2, "text": "5"},
+    {"col": 3, "row": 2, "text": "첫 줄\n둘째 줄"},
+    {"table": 0, "col": 0, "row": 0, "text": "제목 치환"}
+  ]
+}
+```
+
+같은 (col,row)가 여러 표에 있는데 `table` 지정이 없으면 스크립트가 파일을 쓰지 않고 오류로 알린다. 대상 셀 안에 중첩 표가 있으면 내부 표의 셀을 지정한다. `--map` 출력의 구조 비교와 셀 값이 모두 PASS면 그 검증을 신뢰하고 같은 확인을 반복하지 않는다.
+
+아래 수동 편집 규칙은 `fill_cells.py`가 표현하지 못하는 편집(한 셀 안 서식 혼합, run 단위 스타일 변경 등)에만 사용한다.
 
 빈 run의 일반 패턴:
 
@@ -179,6 +215,7 @@ $env:PYTHONIOENCODING='utf-8'
 기본 검증은 구조와 주요 입력값 확인으로 끝낸다. 검증용 HWPX를 별도로 만들거나, 완성본을 한컴 COM으로 재저장하거나, PDF/이미지 렌더링을 수행하지 않는다.
 
 - `& $py "scripts/validate.py" "결과.hwpx"`
+- `fill_cells.py --map`은 저장 직후 구조 비교(표/셀 개수, cellAddr/cellSpan/cellSz)와 대상 셀 값 PASS/FAIL 리포트를 자동 출력한다. 모두 PASS면 셀 값 재확인을 반복하지 않는다. 나중에 다시 확인할 일이 생기면 `& $py "scripts/fill_cells.py" "결과.hwpx" --verify "cells.json"`을 쓴다.
 - ZIP 안의 `Contents/section0.xml`에서 주요 입력값, 표 셀 주소, 병합, 문단/run 구조를 직접 확인한다.
 - 주요 값 count 확인
 - 원본 대비 표 개수, 셀 주소, 병합, 셀 크기, 여백, 문단 수, run 수를 비교한다. 남은 기존 텍스트나 중복 텍스트는 직접 확인한다.
