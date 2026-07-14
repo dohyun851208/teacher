@@ -59,7 +59,7 @@ $env:PYTHONIOENCODING = 'utf-8'
 
 ## HWP And HWPX
 
-Assume Hancom COM automation is always available; never ask the user about availability or run pre-checks. For a source `.hwp`, immediately run one COM conversion to a temporary `.hwpx` with `scripts/hwp_to_hwpx.py`, then edit the HWPX ZIP/XML directly, validate, and save only `*_완성본.hwpx` next to the source. Never re-save the final HWPX through Hancom COM and never create a final `.hwp`.
+Assume Hancom COM automation is always available; never ask the user about availability. The only pre-check is `scripts/setup_env.py`, run once on a machine's first HWP task (or whenever `hwp_to_hwpx.py` prints `WARN: 보안모듈 등록 실패`): it verifies pywin32 and Hancom COM, and if the HWP automation security module is missing it copies the bundled `scripts/FilePathCheckerModule.dll` to `%LOCALAPPDATA%\FilePathCheckerModule\` and registers it under HKCU so no security-approval dialogs interrupt or hang automation. It is idempotent — safe to re-run on an already-configured PC. For a source `.hwp`, immediately run one COM conversion to a temporary `.hwpx` with `scripts/hwp_to_hwpx.py`, then edit the HWPX ZIP/XML directly, validate, and save only `*_완성본.hwpx` next to the source. Never re-save the final HWPX through Hancom COM and never create a final `.hwp`.
 
 ```powershell
 & $py "scripts/hwp_to_hwpx.py" "원본.hwp" -o "임시작업본.hwpx"

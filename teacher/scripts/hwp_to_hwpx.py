@@ -63,7 +63,13 @@ def main():
     hwp = None
     try:
         hwp = win32.Dispatch("HWPFrame.HwpObject")
-        hwp.RegisterModule("FilePathCheckDLL", "FilePathCheckerModule")
+        reg_ok = hwp.RegisterModule("FilePathCheckDLL", "FilePathCheckerModule")
+        if not reg_ok:
+            print(
+                "WARN: 보안모듈 등록 실패 - 한글 보안 승인창이 뜨거나 무인 실행이 멈출 수 있음. "
+                "먼저 실행: python scripts/setup_env.py",
+                file=sys.stderr,
+            )
         hwp.SetMessageBoxMode(0x00020000)
         try:
             hwp.XHwpWindows.Item(0).Visible = False

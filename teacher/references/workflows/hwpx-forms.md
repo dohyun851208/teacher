@@ -8,6 +8,19 @@ HWPX는 ZIP 내부 XML이다. 양식의 표, 이미지, 스타일을 최대한 �
 
 XLSX, 일반 Python, HTML workflow를 수행한 뒤 이 workflow로 돌아오면 PowerShell UTF-8 초기화를 다시 실행한다. 셸 사이에서 현재 디렉터리, `$py`, 환경변수가 유지된다고 가정하지 말고 절대경로를 우선한다.
 
+## 새 PC 최초 1회 셋업
+
+이 스킬을 처음 쓰는 PC(다른 교사 컴퓨터 포함)에서는 첫 HWP 작업 전에 환경 점검 스크립트를 1회 실행한다:
+
+```powershell
+& $py "scripts/setup_env.py"
+```
+
+- pywin32, 한글 COM ProgID, HWP 자동화 보안모듈 등록 상태를 점검하고, 보안모듈이 없으면 스킬 동봉 `scripts/FilePathCheckerModule.dll`을 `%LOCALAPPDATA%\FilePathCheckerModule\`로 복사해 `HKCU\Software\HNC\HwpAutomation\Modules`(구버전 호환으로 `HwpUserAction\Modules`에도)에 등록한 뒤, 실제 한글 COM에서 `RegisterModule` 반환값 True까지 검증한다.
+- 멱등이다. 이미 설정된 PC에서 다시 실행하면 아무것도 변경하지 않고 PASS만 출력하므로, 설정 여부가 불확실하면 그냥 실행한다.
+- 보안모듈이 등록되지 않은 PC에서는 한글이 자동화의 파일 접근마다 보안 승인창("파일의 손상 또는 유출의 위험...")을 띄우고, 무인 실행은 그 창에서 멈춘다. `hwp_to_hwpx.py`가 `WARN: 보안모듈 등록 실패`를 출력하면 이 스크립트를 먼저 실행하고 변환을 다시 시도한다.
+- pywin32 FAIL이면 `python -m pip install pywin32` 후 재실행. 한글 COM FAIL이면 한글(한컴오피스) 설치가 선행되어야 한다.
+
 ## 기본 흐름
 
 최종 산출물이 HWPX일 때의 기본 경로:
@@ -52,6 +65,7 @@ XLSX, 일반 Python, HTML workflow를 수행한 뒤 이 workflow로 돌아오면
 
 주의:
 
+- 스크립트가 `WARN: 보안모듈 등록 실패`를 출력하면 변환 중 한글 보안 승인창이 뜨거나 무인 실행이 멈출 수 있다. `scripts/setup_env.py`를 실행해 보안모듈을 등록한 뒤 다시 변환한다.
 - HWPX 변환은 최대 1회만 표준 경로로 시도한다.
 - 한글 COM은 이 준비 단계에만 사용한다. 최종 `*_완성본.hwpx`를 정리하려고 `Open` + `SaveAs(..., "HWPX")`를 다시 수행하지 않는다.
 - `scripts/convert_hwp.py`처럼 외부 레포나 추가 설치에 의존하는 변환기는 COM 표준 경로 실패 뒤 구조 분석 보조용으로만 고려한다.
@@ -83,7 +97,18 @@ PowerShell에서 여러 줄 Python 코드를 실행할 때는 Bash식 heredoc �
 
 Codex 데스크톱에서는 먼저 `load_workspace_dependencies`로 번들 Python 경로를 확인하고 `$py`에 담아 실행한다. bare `python`을 기본 예시로 쓰지 않는다. HWP COM 변환 fast path에는 `pywin32`/`win32com`이 필요하고, XML 조작 도구에는 `lxml`이 필요할 수 있으므로 번들 Python 또는 해당 모듈이 있는 고정 Python을 사용한다.
 
-Claude Code에는 `load_workspace_dependencies`가 없다. PowerShell에서 `(Get-Command python).Source`로 확인한 python.exe 경로를 `$py`로 사용한다(pywin32가 설치된 Python이어야 한다). 존재하지 않는 도구를 찾느라 멈추지 않는다.
+Claude Code에는 `load_workspace_dependencies`가 없다. Windows에서 `(Get-Command python).Source`는 실행되지 않는 스토어 스텁(`...\WindowsApps\python.exe`)을 반환하는 경우가 많으므로 그 결과를 그대로 쓰지 않는다. 다음 순서로 실제 python.exe를 찾아 `$py`에 담고, `import win32com`으로 pywin32까지 확인한 뒤 진행한다. 존재하지 않는 도구를 찾느라 멈추지 않는다.
+
+```powershell
+$py = @(Get-ChildItem "$env:LOCALAPPDATA\Programs\Python\Python3*\python.exe", `
+  "C:\Program Files\Python3*\python.exe" -ErrorAction SilentlyContinue) |
+  Select-Object -First 1 -ExpandProperty FullName
+if (-not $py) {
+  $c = (Get-Command python -ErrorAction SilentlyContinue).Source
+  if ($c -and $c -notlike '*WindowsApps*') { $py = $c }
+}
+& $py -c "import win32com; print('py ok')"
+```
 
 안정적인 실행 템플릿:
 

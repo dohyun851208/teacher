@@ -17,7 +17,16 @@ import sys
 from pathlib import Path
 from zipfile import ZIP_STORED, BadZipFile, ZipFile
 
-from lxml import etree
+try:
+    from lxml import etree as _etree
+
+    _XML_ERRORS = (_etree.XMLSyntaxError,)
+    _parse_xml = _etree.fromstring
+except ImportError:  # lxml 없으면 표준 라이브러리로 검증 (verify_hwpx.py와 같은 패턴)
+    import xml.etree.ElementTree as _stdlib_et
+
+    _XML_ERRORS = (_stdlib_et.ParseError,)
+    _parse_xml = _stdlib_et.fromstring
 
 REQUIRED_FILES = [
     "mimetype",
@@ -81,8 +90,8 @@ def validate(hwpx_path: str) -> list[str]:
             if name.endswith(".xml") or name.endswith(".hpf"):
                 try:
                     data = zf.read(name)
-                    etree.fromstring(data)
-                except etree.XMLSyntaxError as e:
+                    _parse_xml(data)
+                except _XML_ERRORS as e:
                     errors.append(f"Malformed XML in {name}: {e}")
 
     return errors
