@@ -90,6 +90,8 @@ For filling table cells by address (empty or already filled), use the bundled fi
 
 Fall back to editing `Contents/section0.xml` by hand only when `fill_cells.py` cannot express the change (for example mixed character styles inside one cell). When editing manually, prefer preserving each target cell's original paragraph/run structure and replacing text inside existing runs; clear leftover runs so stale text cannot remain. Keep the final deliverable as `.hwpx`; do not save back to `.hwp`.
 
+To place a signature or seal image, use `scripts/place_signature.py` rather than positioning it by hand. HWPX picture offsets are relative to an anchor whose origin cannot be derived from the XML, so the script measures instead: it renders a throwaway PDF, reads where the picture actually landed, and solves for the offset that hits the target. `--report` lists every image and searched text in millimetres; `--after-text` expresses the target as "start where this text ends", and anything sitting directly below (another signer's seal) is avoided automatically. See `references/workflows/hwpx-forms.md`.
+
 For low-level HWPX creation or repair, use the bundled helpers and templates:
 
 - `scripts/build_hwpx.py`
